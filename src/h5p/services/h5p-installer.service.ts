@@ -4,8 +4,8 @@ import { H5pContentStorage } from './h5p-content-storage.service';
 import { H5pConfigService } from './h5p-config.service';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as extract from 'extract-zip';
-import * as archiver from 'archiver';
+import extract from 'extract-zip';
+import archiver from 'archiver';
 
 export interface H5PPackageInfo {
   title: string;
