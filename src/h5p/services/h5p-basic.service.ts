@@ -81,9 +81,19 @@ export class H5pService implements OnModuleInit {
   }
 
   /**
-   * Ensure all required directories exist
+   * Ensure all required directories exist (disabled for serverless)
    */
   private async ensureDirectories(): Promise<void> {
+    // Skip directory creation for serverless environments like Vercel
+    // Files are stored in database only
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    if (isProduction) {
+      console.log('✓ H5P directories skipped (serverless mode - database storage only)');
+      return;
+    }
+
+    // Only create directories in development
     const fs = require('fs-extra');
     const directories = [
       this.configService.librariesPath,
@@ -93,7 +103,11 @@ export class H5pService implements OnModuleInit {
     ];
 
     for (const dir of directories) {
-      await fs.ensureDir(dir);
+      try {
+        await fs.ensureDir(dir);
+      } catch (error) {
+        console.warn(`Warning: Could not create directory ${dir}:`, error.message);
+      }
     }
     
     console.log('✓ H5P directories created/verified');
