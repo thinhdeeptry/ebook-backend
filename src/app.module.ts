@@ -32,8 +32,11 @@ import { PrismaService } from './common/prisma.service';
       },
     }),
     // Serve static files (uploads)
+    // Use different paths for development vs production to avoid EROFS errors
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
+      rootPath: process.env.NODE_ENV === 'production' 
+        ? join('/tmp', 'uploads') 
+        : join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
     }),
 

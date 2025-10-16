@@ -4,6 +4,12 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { IContentMetadata, IUser } from '@lumieducation/h5p-server';
 
+// Helper function to get the correct base path for different environments
+function getBasePath(): string {
+  const isProduction = process.env.NODE_ENV === 'production';
+  return isProduction ? '/tmp' : process.cwd();
+}
+
 interface H5PUser {
   id: string;
   name: string;
@@ -81,7 +87,7 @@ export class H5pContentStorage {
     file: string
   ): Promise<NodeJS.ReadableStream> {
     const contentPath = path.join(
-      process.cwd(),
+      getBasePath(),
       'uploads',
       'h5p',
       'content',
@@ -177,16 +183,16 @@ export class H5pContentStorage {
     filename: string,
     dataStream: NodeJS.ReadableStream
   ): Promise<void> {
-    const contentDir = path.join(
-      process.cwd(),
+    const contentPath = path.join(
+      getBasePath(),
       'uploads',
       'h5p',
       'content',
       contentId
     );
-    await fs.ensureDir(contentDir);
+    await fs.ensureDir(contentPath);
 
-    const filePath = path.join(contentDir, filename);
+    const filePath = path.join(contentPath, filename);
     const writeStream = fs.createWriteStream(filePath);
 
     return new Promise((resolve, reject) => {
@@ -237,7 +243,7 @@ export class H5pContentStorage {
 
   async contentFileExists(contentId: string, filename: string): Promise<boolean> {
     const filePath = path.join(
-      process.cwd(),
+      getBasePath(),
       'uploads',
       'h5p',
       'content',
@@ -249,7 +255,7 @@ export class H5pContentStorage {
 
   async deleteContentFile(contentId: string, filename: string): Promise<void> {
     const filePath = path.join(
-      process.cwd(),
+      getBasePath(),
       'uploads',
       'h5p',
       'content',
@@ -264,7 +270,7 @@ export class H5pContentStorage {
 
   async getContentFileStats(contentId: string, file: string): Promise<{ size: number; birthtime: Date; }> {
     const filePath = path.join(
-      process.cwd(),
+      getBasePath(),
       'uploads',
       'h5p',
       'content',

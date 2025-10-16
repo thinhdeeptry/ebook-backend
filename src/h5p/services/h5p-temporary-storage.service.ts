@@ -24,9 +24,13 @@ export interface H5PUploadedFile {
 
 @Injectable()
 export class H5pTemporaryStorage {
-  private readonly uploadDir = path.join(process.cwd(), 'uploads', 'h5p', 'temp');
+  private readonly uploadDir: string;
 
   constructor(private prisma: PrismaService) {
+    // Use /tmp for production to avoid EROFS errors on serverless
+    const isProduction = process.env.NODE_ENV === 'production';
+    const basePath = isProduction ? '/tmp' : process.cwd();
+    this.uploadDir = path.join(basePath, 'uploads', 'h5p', 'temp');
     this.ensureUploadDir();
   }
 

@@ -29,7 +29,13 @@ async function bootstrap() {
   });
 
   // Static file serving for uploads
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+  // Use different paths for development vs production to avoid EROFS errors on serverless
+  const isProduction = process.env.NODE_ENV === 'production';
+  const uploadsPath = isProduction 
+    ? join('/tmp', 'uploads') 
+    : join(__dirname, '..', 'uploads');
+  
+  app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
   });
 

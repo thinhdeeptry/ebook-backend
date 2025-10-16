@@ -18,19 +18,31 @@ export class H5pConfigService {
 
   // Directory paths
   get librariesPath(): string {
-    return path.join(process.cwd(), 'uploads', 'h5p', 'libraries');
+    // Use /tmp for serverless environments like Vercel to avoid EROFS errors
+    const isProduction = process.env.NODE_ENV === 'production';
+    const basePath = isProduction ? '/tmp' : process.cwd();
+    return path.join(basePath, 'uploads', 'h5p', 'libraries');
   }
 
   get contentPath(): string {
-    return path.join(process.cwd(), 'uploads', 'h5p', 'content');
+    // Use /tmp for serverless environments like Vercel to avoid EROFS errors
+    const isProduction = process.env.NODE_ENV === 'production';
+    const basePath = isProduction ? '/tmp' : process.cwd();
+    return path.join(basePath, 'uploads', 'h5p', 'content');
   }
 
   get temporaryPath(): string {
-    return path.join(process.cwd(), 'uploads', 'h5p', 'temp');
+    // Use /tmp for serverless environments like Vercel to avoid EROFS errors
+    const isProduction = process.env.NODE_ENV === 'production';
+    const basePath = isProduction ? '/tmp' : process.cwd();
+    return path.join(basePath, 'uploads', 'h5p', 'temp');
   }
 
   get workPath(): string {
-    return path.join(process.cwd(), 'uploads', 'h5p', 'work');
+    // Use /tmp for serverless environments like Vercel to avoid EROFS errors
+    const isProduction = process.env.NODE_ENV === 'production';
+    const basePath = isProduction ? '/tmp' : process.cwd();
+    return path.join(basePath, 'uploads', 'h5p', 'work');
   }
 
   // Content settings
