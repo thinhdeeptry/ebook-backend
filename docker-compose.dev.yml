@@ -1,0 +1,69 @@
+# Docker Compose for Development Environment
+# Includes hot reload, development database, and debugging capabilities
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Development
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: elearning-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ebook_reader_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - elearning-dev-network
+
+  # Redis for Development
+  redis-dev:
+    image: redis:7-alpine
+    container_name: elearning-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - elearning-dev-network
+
+  # NestJS Development Server with Hot Reload
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: elearning-backend-dev
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+      - "9229:9229"  # Debug port
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres123@postgres-dev:5432/ebook_reader_dev?schema=public"
+      JWT_SECRET: "dev_jwt_secret_key"
+      JWT_EXPIRATION: "24h"
+      NODE_ENV: "development"
+      PORT: 3001
+      FRONTEND_URL: "http://localhost:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules  # Anonymous volume to prevent overwriting
+      - uploads_dev_data:/app/uploads
+    depends_on:
+      - postgres-dev
+      - redis-dev
+    networks:
+      - elearning-dev-network
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:
+  uploads_dev_data:
+
+networks:
+  elearning-dev-network:
+    driver: bridge

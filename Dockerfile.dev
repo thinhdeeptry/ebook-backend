@@ -1,0 +1,29 @@
+# Dockerfile for Development Environment
+# Includes hot reload and debugging capabilities
+
+FROM node:18-alpine
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml* ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN pnpm install
+
+# Generate Prisma client
+RUN pnpm prisma generate
+
+# Copy source code
+COPY . .
+
+# Expose ports
+EXPOSE 3001 9229
+
+# Start in development mode with hot reload and debugging
+CMD ["pnpm", "run", "start:debug"]

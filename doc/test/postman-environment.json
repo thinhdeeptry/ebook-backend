@@ -1,0 +1,49 @@
+{
+	"id": "e-learning-env",
+	"name": "E-Learning Environment",
+	"values": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3001",
+			"enabled": true,
+			"type": "default"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"enabled": true,
+			"type": "secret"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"enabled": true,
+			"type": "default"
+		},
+		{
+			"key": "ebookId",
+			"value": "",
+			"enabled": true,
+			"type": "default"
+		},
+		{
+			"key": "h5pContentId",
+			"value": "",
+			"enabled": true,
+			"type": "default"
+		},
+		{
+			"key": "trackingEventId",
+			"value": "",
+			"enabled": true,
+			"type": "default"
+		},
+		{
+			"key": "userIdToDelete",
+			"value": "",
+			"enabled": true,
+			"type": "default"
+		}
+	],
+	"_postman_variable_scope": "environment"
+}

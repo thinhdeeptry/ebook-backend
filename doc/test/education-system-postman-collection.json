@@ -1,0 +1,1254 @@
+{
+  "info": {
+    "name": "Hệ thống Quản lý Giáo dục - API Collection",
+    "description": "Collection để test các API modules của hệ thống quản lý giáo dục bao gồm Classes, Courses, Lessons, LessonSteps, StudentProgress và H5P Integration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "education-system-api-collection"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "class_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "course_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lesson_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lesson_step_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "h5p_content_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "progress_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Đăng ký tài khoản",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@school.edu.vn\",\n  \"password\": \"Admin123!\",\n  \"firstName\": \"Nguyễn\",\n  \"lastName\": \"Quản trị\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Đăng nhập",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', response.access_token);",
+                  "    pm.collectionVariables.set('user_id', response.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@school.edu.vn\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Xem thông tin cá nhân",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏫 Classes API",
+      "item": [
+        {
+          "name": "Tạo lớp học mới",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('class_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lớp 1A\",\n  \"gradeLevel\": 1,\n  \"description\": \"Lớp 1A năm học 2024-2025\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/classes",
+              "host": ["{{base_url}}"],
+              "path": ["classes"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách tất cả lớp học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/classes",
+              "host": ["{{base_url}}"],
+              "path": ["classes"]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin chi tiết lớp học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/classes/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "{{class_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật thông tin lớp học",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lớp 1A - Cập nhật\",\n  \"description\": \"Lớp 1A năm học 2024-2025 - Đã cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/classes/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "{{class_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Thêm học sinh vào lớp",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userIds\": [\"{{user_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/classes/{{class_id}}/students",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "{{class_id}}", "students"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách học sinh trong lớp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/classes/{{class_id}}/students",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "{{class_id}}", "students"]
+            }
+          }
+        },
+        {
+          "name": "Tìm kiếm lớp học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/classes/search?searchTerm=Lớp 1&gradeLevel=1",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "search"],
+              "query": [
+                {
+                  "key": "searchTerm",
+                  "value": "Lớp 1"
+                },
+                {
+                  "key": "gradeLevel",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Thống kê lớp học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/classes/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "statistics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📚 Courses API",
+      "item": [
+        {
+          "name": "Tạo khóa học mới",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('course_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Toán học Lớp 1\",\n  \"description\": \"Khóa học Toán học dành cho học sinh lớp 1\",\n  \"thumbnailUrl\": \"https://example.com/math-thumbnail.jpg\",\n  \"classId\": \"{{class_id}}\",\n  \"isPublished\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/courses",
+              "host": ["{{base_url}}"],
+              "path": ["courses"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách tất cả khóa học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/courses?classId={{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["courses"],
+              "query": [
+                {
+                  "key": "classId",
+                  "value": "{{class_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin chi tiết khóa học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/courses/{{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["courses", "{{course_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật thông tin khóa học",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Toán học Lớp 1 - Cập nhật\",\n  \"description\": \"Khóa học Toán học dành cho học sinh lớp 1 - Đã cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/courses/{{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["courses", "{{course_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Xuất bản khóa học",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/courses/{{course_id}}/publish",
+              "host": ["{{base_url}}"],
+              "path": ["courses", "{{course_id}}", "publish"]
+            }
+          }
+        },
+        {
+          "name": "Ẩn khóa học",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/courses/{{course_id}}/unpublish",
+              "host": ["{{base_url}}"],
+              "path": ["courses", "{{course_id}}", "unpublish"]
+            }
+          }
+        },
+        {
+          "name": "Lấy khóa học theo lớp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/courses/class/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["courses", "class", "{{class_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Tìm kiếm khóa học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/courses/search?searchTerm=Toán&classId={{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["courses", "search"],
+              "query": [
+                {
+                  "key": "searchTerm",
+                  "value": "Toán"
+                },
+                {
+                  "key": "classId",
+                  "value": "{{class_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sao chép khóa học",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newTitle\": \"Toán học Lớp 1 (Bản sao)\",\n  \"targetClassId\": \"{{class_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/courses/{{course_id}}/duplicate",
+              "host": ["{{base_url}}"],
+              "path": ["courses", "{{course_id}}", "duplicate"]
+            }
+          }
+        },
+        {
+          "name": "Thống kê khóa học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/courses/statistics?classId={{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["courses", "statistics"],
+              "query": [
+                {
+                  "key": "classId",
+                  "value": "{{class_id}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📖 Lessons API",
+      "item": [
+        {
+          "name": "Tạo bài học mới",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('lesson_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bài 1: Phép cộng trong phạm vi 10\",\n  \"description\": \"Học sinh sẽ học cách thực hiện phép cộng các số từ 1 đến 10\",\n  \"courseId\": \"{{course_id}}\",\n  \"order\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lessons",
+              "host": ["{{base_url}}"],
+              "path": ["lessons"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách tất cả bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lessons?courseId={{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons"],
+              "query": [
+                {
+                  "key": "courseId",
+                  "value": "{{course_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin chi tiết bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lessons/{{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "{{lesson_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật thông tin bài học",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bài 1: Phép cộng trong phạm vi 10 - Cập nhật\",\n  \"description\": \"Học sinh sẽ học cách thực hiện phép cộng các số từ 1 đến 10 - Mô tả cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lessons/{{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "{{lesson_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy bài học theo khóa học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lessons/course/{{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "course", "{{course_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Sắp xếp lại thứ tự bài học",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lessonIds\": [\"{{lesson_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lessons/course/{{course_id}}/reorder",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "course", "{{course_id}}", "reorder"]
+            }
+          }
+        },
+        {
+          "name": "Sao chép bài học",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newTitle\": \"Bài 1: Phép cộng trong phạm vi 10 (Bản sao)\",\n  \"targetCourseId\": \"{{course_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lessons/{{lesson_id}}/duplicate",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "{{lesson_id}}", "duplicate"]
+            }
+          }
+        },
+        {
+          "name": "Tìm kiếm bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lessons/search?searchTerm=Phép cộng&courseId={{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "search"],
+              "query": [
+                {
+                  "key": "searchTerm",
+                  "value": "Phép cộng"
+                },
+                {
+                  "key": "courseId",
+                  "value": "{{course_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Thống kê bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lessons/statistics?courseId={{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "statistics"],
+              "query": [
+                {
+                  "key": "courseId",
+                  "value": "{{course_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lấy navigation bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lessons/{{lesson_id}}/navigation",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "{{lesson_id}}", "navigation"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎯 LessonSteps API",
+      "item": [
+        {
+          "name": "Tạo bước học TEXT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('lesson_step_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Giới thiệu phép cộng\",\n  \"description\": \"Bước đầu tiên để hiểu phép cộng\",\n  \"contentType\": \"TEXT\",\n  \"textContent\": \"# Phép cộng là gì?\\n\\nPhép cộng là một phép toán cơ bản trong Toán học. Khi chúng ta cộng hai số, ta được tổng của chúng.\\n\\n## Ví dụ:\\n- 1 + 1 = 2\\n- 2 + 3 = 5\",\n  \"lessonId\": \"{{lesson_id}}\",\n  \"order\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lesson-steps",
+              "host": ["{{base_url}}"],
+              "path": ["lesson-steps"]
+            }
+          }
+        },
+        {
+          "name": "Tạo bước học VIDEO",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Video hướng dẫn phép cộng\",\n  \"description\": \"Video minh họa cách thực hiện phép cộng\",\n  \"contentType\": \"VIDEO\",\n  \"videoUrl\": \"https://youtube.com/watch?v=abc123\",\n  \"lessonId\": \"{{lesson_id}}\",\n  \"order\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lesson-steps",
+              "host": ["{{base_url}}"],
+              "path": ["lesson-steps"]
+            }
+          }
+        },
+        {
+          "name": "Tạo bước học H5P",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bài tập tương tác\",\n  \"description\": \"Quiz kiểm tra hiểu biết về phép cộng\",\n  \"contentType\": \"H5P\",\n  \"h5pContentId\": \"{{h5p_content_id}}\",\n  \"lessonId\": \"{{lesson_id}}\",\n  \"order\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lesson-steps",
+              "host": ["{{base_url}}"],
+              "path": ["lesson-steps"]
+            }
+          }
+        },
+        {
+          "name": "Lấy tất cả bước học của bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lesson-steps/lesson/{{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lesson-steps", "lesson", "{{lesson_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin chi tiết bước học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lesson-steps/{{lesson_step_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lesson-steps", "{{lesson_step_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật bước học",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Giới thiệu phép cộng - Cập nhật\",\n  \"textContent\": \"# Phép cộng là gì? (Cập nhật)\\n\\nPhép cộng là một phép toán cơ bản và quan trọng nhất trong Toán học.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lesson-steps/{{lesson_step_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lesson-steps", "{{lesson_step_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Sắp xếp lại thứ tự bước học",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stepIds\": [\"{{lesson_step_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lesson-steps/lesson/{{lesson_id}}/reorder",
+              "host": ["{{base_url}}"],
+              "path": ["lesson-steps", "lesson", "{{lesson_id}}", "reorder"]
+            }
+          }
+        },
+        {
+          "name": "Sao chép bước học",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lesson-steps/{{lesson_step_id}}/duplicate",
+              "host": ["{{base_url}}"],
+              "path": ["lesson-steps", "{{lesson_step_id}}", "duplicate"]
+            }
+          }
+        },
+        {
+          "name": "Tìm kiếm bước học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lesson-steps/search?lessonId={{lesson_id}}&searchTerm=phép cộng",
+              "host": ["{{base_url}}"],
+              "path": ["lesson-steps", "search"],
+              "query": [
+                {
+                  "key": "lessonId",
+                  "value": "{{lesson_id}}"
+                },
+                {
+                  "key": "searchTerm",
+                  "value": "phép cộng"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Thống kê bước học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lesson-steps/statistics?lessonId={{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lesson-steps", "statistics"],
+              "query": [
+                {
+                  "key": "lessonId",
+                  "value": "{{lesson_id}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 StudentProgress API",
+      "item": [
+        {
+          "name": "Tạo tiến độ học tập",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('progress_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"lessonStepId\": \"{{lesson_step_id}}\",\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/student-progress",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress"]
+            }
+          }
+        },
+        {
+          "name": "Lấy tiến độ của học sinh",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/student-progress/user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "user", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy tiến độ của tôi",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/student-progress/my-progress",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "my-progress"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật tiến độ",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/student-progress/{{progress_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "{{progress_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy tiến độ theo bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/student-progress/lesson/{{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "lesson", "{{lesson_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Thống kê tiến độ tổng quan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/student-progress/summary?userId={{user_id}}&lessonId={{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "summary"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}"
+                },
+                {
+                  "key": "lessonId",
+                  "value": "{{lesson_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tạo lần thử quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentProgressId\": \"{{progress_id}}\",\n  \"score\": 85.5,\n  \"isPass\": true,\n  \"statement\": {\n    \"actor\": { \"name\": \"Nguyễn Văn An\" },\n    \"verb\": { \"display\": { \"en-US\": \"completed\" } },\n    \"object\": { \"definition\": { \"name\": { \"en-US\": \"Quiz phép cộng\" } } },\n    \"result\": { \"score\": { \"scaled\": 0.855 }, \"completion\": true, \"success\": true }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/student-progress/quiz-attempt",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "quiz-attempt"]
+            }
+          }
+        },
+        {
+          "name": "Lấy lịch sử quiz attempts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/student-progress/{{progress_id}}/quiz-attempts",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "{{progress_id}}", "quiz-attempts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎮 H5P API",
+      "item": [
+        {
+          "name": "Upload H5P package",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('h5p_content_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "path/to/your/h5p-package.h5p"
+                },
+                {
+                  "key": "lessonStepId",
+                  "value": "{{lesson_step_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "isPublic",
+                  "value": "true",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/h5p/upload",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách H5P content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p",
+              "host": ["{{base_url}}"],
+              "path": ["h5p"]
+            }
+          }
+        },
+        {
+          "name": "Lấy chi tiết H5P content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/{{h5p_content_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "{{h5p_content_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật H5P content",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Quiz Toán học Lớp 1 - Cập nhật\",\n  \"isPublic\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/h5p/{{h5p_content_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "{{h5p_content_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy H5P theo bước học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/lesson-step/{{lesson_step_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "lesson-step", "{{lesson_step_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy H5P công khai",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/public",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "public"]
+            }
+          }
+        },
+        {
+          "name": "Gán H5P cho bước học",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lessonStepId\": \"{{lesson_step_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/h5p/{{h5p_content_id}}/assign-to-step",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "{{h5p_content_id}}", "assign-to-step"]
+            }
+          }
+        },
+        {
+          "name": "Hủy gán H5P khỏi bước học",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/{{h5p_content_id}}/unassign-from-step",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "{{h5p_content_id}}", "unassign-from-step"]
+            }
+          }
+        },
+        {
+          "name": "Gửi xAPI statement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"actor\": {\n    \"name\": \"Nguyễn Văn An\",\n    \"account\": {\n      \"name\": \"{{user_id}}\",\n      \"homePage\": \"{{base_url}}\"\n    }\n  },\n  \"verb\": {\n    \"id\": \"http://adlnet.gov/expapi/verbs/completed\",\n    \"display\": {\n      \"en-US\": \"completed\",\n      \"vi-VN\": \"đã hoàn thành\"\n    }\n  },\n  \"object\": {\n    \"id\": \"{{base_url}}/h5p/{{h5p_content_id}}\",\n    \"definition\": {\n      \"name\": {\n        \"en-US\": \"Addition Quiz\",\n        \"vi-VN\": \"Quiz Phép cộng\"\n      },\n      \"type\": \"http://adlnet.gov/expapi/activities/assessment\"\n    }\n  },\n  \"result\": {\n    \"score\": {\n      \"scaled\": 0.85,\n      \"raw\": 85,\n      \"min\": 0,\n      \"max\": 100\n    },\n    \"completion\": true,\n    \"success\": true,\n    \"duration\": \"PT2M30S\"\n  },\n  \"context\": {\n    \"contextActivities\": {\n      \"parent\": [{\n        \"id\": \"{{base_url}}/lesson-steps/{{lesson_step_id}}\",\n        \"definition\": {\n          \"name\": {\n            \"vi-VN\": \"Bài tập tương tác\"\n          }\n        }\n      }]\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tracking/xapi",
+              "host": ["{{base_url}}"],
+              "path": ["tracking", "xapi"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Users API",
+      "item": [
+        {
+          "name": "Lấy danh sách người dùng",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin người dùng",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật thông tin người dùng",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Nguyễn\",\n  \"lastName\": \"Quản trị cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

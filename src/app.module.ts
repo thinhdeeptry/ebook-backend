@@ -1,0 +1,56 @@
+import { Module, Global } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { join } from 'path';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { H5pModule } from './h5p/h5p.module';
+import { TrackingModule } from './tracking/tracking.module';
+import { ClassesModule } from './classes/classes.module';
+import { CoursesModule } from './courses/courses.module';
+import { LessonsModule } from './lessons/lessons.module';
+import { LessonStepsModule } from './lesson-steps/lesson-steps.module';
+import { StudentProgressModule } from './student-progress/student-progress.module';
+import { PrismaService } from './common/prisma.service';
+
+@Global()
+@Module({
+  imports: [
+    // Configuration module for environment variables
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    TypeOrmModule.forRoot({ // Ví dụ với TypeORM
+      type: 'postgres',
+      url: process.env.DATABASE_URL, // Đọc từ biến môi trường
+      autoLoadEntities: true,
+      synchronize: true, // Chỉ dùng cho dev, không nên dùng cho production
+      ssl: {
+        rejectUnauthorized: false, // Cần thiết cho nhiều cloud database
+      },
+    }),
+    // Serve static files (uploads)
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
+
+    // Feature modules
+    AuthModule,
+    UsersModule,
+    H5pModule,
+    TrackingModule,
+    
+    // Educational management modules
+    ClassesModule,
+    CoursesModule,
+    LessonsModule,
+    LessonStepsModule,
+    StudentProgressModule,
+  ],
+  providers: [PrismaService],
+  exports: [PrismaService],
+})
+export class AppModule {}

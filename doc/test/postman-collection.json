@@ -1,0 +1,1918 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-1234-1234-123456789012",
+		"name": "E-Learning Backend API with H5P Integration",
+		"description": "Complete API collection for E-Learning Platform built with NestJS including comprehensive H5P Interactive Content integration using Lumi Education libraries. Features authentication, user management, EPUB handling, H5P content creation/management, and analytics tracking.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"student123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Student\",\n  \"role\": \"STUDENT\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (responseCode.code === 200 || responseCode.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('accessToken', response.access_token);",
+									"    pm.environment.set('userId', response.user.id);",
+									"    console.log('Token saved:', response.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👥 User Management",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users by Role",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/role/STUDENT",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"role",
+								"STUDENT"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newteacher@example.com\",\n  \"password\": \"teacher123\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Teacher\",\n  \"role\": \"TEACHER\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Jane Updated\",\n  \"lastName\": \"Teacher Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userIdToDelete}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userIdToDelete}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📚 EPUB Management",
+			"item": [
+				{
+					"name": "Get All Ebooks",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/epub",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"epub"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Public Ebooks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/epub?public=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"epub"
+							],
+							"query": [
+								{
+									"key": "public",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Ebook Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/epub/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"epub",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Ebook by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/epub/{{ebookId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"epub",
+								"{{ebookId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Ebook Content",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/epub/{{ebookId}}/content",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"epub",
+								"{{ebookId}}",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download Ebook",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/epub/{{ebookId}}/download",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"epub",
+								"{{ebookId}}",
+								"download"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Ebook Entry",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Learn English Grammar\",\n  \"author\": \"John Author\",\n  \"description\": \"Complete guide to English grammar for beginners\",\n  \"isPublic\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/epub",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"epub"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Ebook File",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/your/book.epub",
+									"description": "Select an EPUB file to upload"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/epub/upload",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"epub",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Ebook",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Book Title\",\n  \"description\": \"Updated description\",\n  \"isPublic\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/epub/{{ebookId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"epub",
+								"{{ebookId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Ebook",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/epub/{{ebookId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"epub",
+								"{{ebookId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🎮 H5P Interactive Content",
+			"item": [
+				{
+					"name": "📊 H5P System & Status",
+					"item": [
+						{
+							"name": "H5P Health Check",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/health",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"health"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get H5P Integration Config",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/integration?contentId={{h5pContentId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"integration"
+									],
+									"query": [
+										{
+											"key": "contentId",
+											"value": "{{h5pContentId}}",
+											"description": "Optional: specific content ID"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Available Content Types",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content-types",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content-types"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get H5P Libraries",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/libraries",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"libraries"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "✏️ H5P Content Management",
+					"item": [
+						{
+							"name": "Get User's H5P Content",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create H5P Content",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"library\": \"H5P.InteractiveVideo 1.26\",\n  \"params\": {\n    \"interactiveVideo\": {\n      \"video\": {\n        \"startScreenOptions\": {\n          \"title\": \"Interactive Video\",\n          \"hideStartTitle\": false\n        },\n        \"textTracks\": {\n          \"videoTrack\": [\n            {\n              \"label\": \"Subtitles\",\n              \"kind\": \"subtitles\",\n              \"srcLang\": \"en\"\n            }\n          ]\n        }\n      },\n      \"assets\": {\n        \"interactions\": [],\n        \"bookmarks\": []\n      },\n      \"summary\": {\n        \"task\": {\n          \"library\": \"H5P.Summary 1.10\",\n          \"params\": {\n            \"intro\": \"Choose the correct statement.\",\n            \"summaries\": []\n          }\n        }\n      }\n    }\n  },\n  \"metadata\": {\n    \"title\": \"Sample Interactive Video\",\n    \"authors\": [],\n    \"source\": \"\",\n    \"license\": \"U\",\n    \"licenseVersion\": \"4.0\",\n    \"licenseExtras\": \"\",\n    \"yearFrom\": \"\",\n    \"yearTo\": \"\",\n    \"changes\": [],\n    \"defaultLanguage\": \"en\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update H5P Content",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"library\": \"H5P.InteractiveVideo 1.26\",\n  \"params\": {\n    \"interactiveVideo\": {\n      \"video\": {\n        \"startScreenOptions\": {\n          \"title\": \"Updated Interactive Video\",\n          \"hideStartTitle\": false\n        }\n      }\n    }\n  },\n  \"metadata\": {\n    \"title\": \"Updated Interactive Video Title\",\n    \"defaultLanguage\": \"en\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content/{{h5pContentId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content",
+										"{{h5pContentId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete H5P Content",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content/{{h5pContentId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content",
+										"{{h5pContentId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get H5P Content for Editing",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content/{{h5pContentId}}/edit",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content",
+										"{{h5pContentId}}",
+										"edit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get H5P Content for Playing",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content/{{h5pContentId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content",
+										"{{h5pContentId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "🎬 H5P Editor & Player",
+					"item": [
+						{
+							"name": "Get H5P Editor Integration",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/editor?contentId={{h5pContentId}}&language=en",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"editor"
+									],
+									"query": [
+										{
+											"key": "contentId",
+											"value": "{{h5pContentId}}",
+											"description": "Optional: Content ID for editing existing content"
+										},
+										{
+											"key": "language",
+											"value": "en",
+											"description": "Language code (default: en)"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get H5P Player Integration",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/player/{{h5pContentId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"player",
+										"{{h5pContentId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "📁 H5P File Management",
+					"item": [
+						{
+							"name": "Upload Temporary File",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/path/to/your/content.h5p",
+											"description": "Select an H5P file or media file to upload"
+										},
+										{
+											"key": "field",
+											"value": "files",
+											"description": "Field name (optional)",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/h5p/files",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"files"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Temporary File",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/files/{{fileId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"files",
+										"{{fileId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Temporary File",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/files/{{fileId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"files",
+										"{{fileId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "🔗 H5P AJAX & Integration",
+					"item": [
+						{
+							"name": "Process H5P AJAX Request - setFinished",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"contentId\": \"{{h5pContentId}}\",\n  \"score\": 85,\n  \"maxScore\": 100,\n  \"opened\": 1696204800,\n  \"finished\": 1696205700,\n  \"time\": 900\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/h5p/ajax/setFinished",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"ajax",
+										"setFinished"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Process H5P AJAX Request - contentUserData",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"contentId\": \"{{h5pContentId}}\",\n  \"dataType\": \"state\",\n  \"subContentId\": 0,\n  \"data\": \"{\\\"progress\\\":50,\\\"answers\\\":[\\\"option1\\\",\\\"option3\\\"]}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/h5p/ajax/contentUserData",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"ajax",
+										"contentUserData"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Process H5P AJAX Request - Generic",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"action\": \"custom_action\",\n  \"data\": {\n    \"key\": \"value\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/h5p/ajax/{{actionName}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"ajax",
+										"{{actionName}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "📊 Tracking & Analytics",
+			"item": [
+				{
+					"name": "Create Tracking Event",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"verb\": \"completed\",\n  \"objectId\": \"chapter-1\",\n  \"contentId\": \"{{h5pContentId}}\",\n  \"statement\": {\n    \"actor\": {\n      \"name\": \"John Doe\",\n      \"mbox\": \"mailto:john@example.com\"\n    },\n    \"verb\": {\n      \"id\": \"http://adlnet.gov/expapi/verbs/completed\",\n      \"display\": {\"en-US\": \"completed\"}\n    },\n    \"object\": {\n      \"id\": \"chapter-1\",\n      \"definition\": {\n        \"name\": {\"en-US\": \"Chapter 1: Introduction\"}\n      }\n    }\n  },\n  \"result\": {\n    \"completion\": true,\n    \"score\": {\n      \"raw\": 85,\n      \"max\": 100\n    }\n  },\n  \"context\": {\n    \"instructor\": \"Teacher Name\",\n    \"platform\": \"E-Learning Platform\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tracking",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tracking"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tracking Events",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tracking",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tracking"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tracking Events with Filters",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tracking?userId={{userId}}&verb=completed&startDate=2025-10-01&endDate=2025-10-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tracking"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "verb",
+									"value": "completed"
+								},
+								{
+									"key": "startDate",
+									"value": "2025-10-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-10-31"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Analytics Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tracking/analytics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tracking",
+								"analytics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Progress",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tracking/progress/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tracking",
+								"progress",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Progress for Specific Content",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tracking/progress/{{userId}}?contentId={{h5pContentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tracking",
+								"progress",
+								"{{userId}}"
+							],
+							"query": [
+								{
+									"key": "contentId",
+									"value": "{{h5pContentId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tracking Event by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tracking/{{trackingEventId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tracking",
+								"{{trackingEventId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Tracking Event",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tracking/{{trackingEventId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tracking",
+								"{{trackingEventId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🧪 Test Scenarios",
+			"item": [
+				{
+					"name": "Complete Learning Flow",
+					"item": [
+						{
+							"name": "1. Login as Student",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"student123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Get Available Ebooks",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/epub?public=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"epub"
+									],
+									"query": [
+										{
+											"key": "public",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Start Reading (Track Event)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"verb\": \"experienced\",\n  \"objectId\": \"chapter-1\",\n  \"statement\": {\n    \"actor\": {\n      \"name\": \"Student User\",\n      \"mbox\": \"mailto:student@example.com\"\n    },\n    \"verb\": {\n      \"id\": \"http://adlnet.gov/expapi/verbs/experienced\",\n      \"display\": {\"en-US\": \"experienced\"}\n    },\n    \"object\": {\n      \"id\": \"chapter-1\",\n      \"definition\": {\n        \"name\": {\"en-US\": \"Started reading Chapter 1\"}\n      }\n    }\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/tracking",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tracking"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Complete Chapter (Track Event)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"verb\": \"completed\",\n  \"objectId\": \"chapter-1\",\n  \"statement\": {\n    \"actor\": {\n      \"name\": \"Student User\",\n      \"mbox\": \"mailto:student@example.com\"\n    },\n    \"verb\": {\n      \"id\": \"http://adlnet.gov/expapi/verbs/completed\",\n      \"display\": {\"en-US\": \"completed\"}\n    },\n    \"object\": {\n      \"id\": \"chapter-1\",\n      \"definition\": {\n        \"name\": {\"en-US\": \"Completed Chapter 1\"}\n      }\n    }\n  },\n  \"result\": {\n    \"completion\": true,\n    \"duration\": \"PT15M\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/tracking",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tracking"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Teacher Workflow",
+					"item": [
+						{
+							"name": "1. Login as Teacher",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"teacher@example.com\",\n  \"password\": \"teacher123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Get Students",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/users/role/STUDENT",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users",
+										"role",
+										"STUDENT"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. View Analytics",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/tracking/analytics",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tracking",
+										"analytics"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "H5P Content Creation Flow",
+					"item": [
+						{
+							"name": "1. Login as Teacher",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (responseCode.code === 200 || responseCode.code === 201) {",
+											"    const response = pm.response.json();",
+											"    pm.environment.set('accessToken', response.access_token);",
+											"    pm.environment.set('userId', response.user.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"teacher@example.com\",\n  \"password\": \"teacher123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Check H5P Health",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/health",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"health"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Get Available Content Types",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content-types",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content-types"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Get Editor Integration",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/editor?language=en",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"editor"
+									],
+									"query": [
+										{
+											"key": "language",
+											"value": "en"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "5. Create H5P Content",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (responseCode.code === 200 || responseCode.code === 201) {",
+											"    const response = pm.response.json();",
+											"    if (response.data && response.data.id) {",
+											"        pm.environment.set('h5pContentId', response.data.id);",
+											"        console.log('H5P Content ID saved:', response.data.id);",
+											"    }",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"library\": \"H5P.InteractiveVideo 1.26\",\n  \"params\": {\n    \"interactiveVideo\": {\n      \"video\": {\n        \"startScreenOptions\": {\n          \"title\": \"Test Interactive Video\",\n          \"hideStartTitle\": false\n        }\n      }\n    }\n  },\n  \"metadata\": {\n    \"title\": \"Test Interactive Video Content\",\n    \"defaultLanguage\": \"en\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "6. Get Player Integration",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/player/{{h5pContentId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"player",
+										"{{h5pContentId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "H5P Student Experience Flow",
+					"item": [
+						{
+							"name": "1. Login as Student",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (responseCode.code === 200 || responseCode.code === 201) {",
+											"    const response = pm.response.json();",
+											"    pm.environment.set('accessToken', response.access_token);",
+											"    pm.environment.set('userId', response.user.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"student123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Get Available H5P Content",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Play H5P Content",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/h5p/content/{{h5pContentId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"content",
+										"{{h5pContentId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Submit H5P Interaction (setFinished)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"contentId\": \"{{h5pContentId}}\",\n  \"score\": 85,\n  \"maxScore\": 100,\n  \"opened\": 1696204800,\n  \"finished\": 1696205700,\n  \"time\": 900\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/h5p/ajax/setFinished",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"ajax",
+										"setFinished"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "5. Save User Data During Interaction",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"contentId\": \"{{h5pContentId}}\",\n  \"dataType\": \"state\",\n  \"subContentId\": 0,\n  \"data\": \"{\\\"progress\\\":75,\\\"currentSlide\\\":5,\\\"answers\\\":[\\\"option1\\\",\\\"option3\\\"]}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/h5p/ajax/contentUserData",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"h5p",
+										"ajax",
+										"contentUserData"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-set baseUrl if not defined",
+					"if (!pm.environment.get('baseUrl')) {",
+					"    pm.environment.set('baseUrl', 'http://localhost:3001');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "ebookId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "h5pContentId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "trackingEventId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "fileId",
+			"value": "",
+			"type": "string",
+			"description": "H5P temporary file ID for testing file operations"
+		},
+		{
+			"key": "actionName", 
+			"value": "setFinished",
+			"type": "string",
+			"description": "H5P AJAX action name (setFinished, contentUserData, etc.)"
+		}
+	]
+}

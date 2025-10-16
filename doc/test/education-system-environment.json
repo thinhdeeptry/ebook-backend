@@ -1,0 +1,114 @@
+{
+  "id": "education-system-environment",
+  "name": "Education System - Environment",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "description": "Base URL của API server",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "description": "JWT token từ đăng nhập (sẽ tự động set sau khi login)",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "description": "ID của user hiện tại (sẽ tự động set sau khi login)",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "admin_email",
+      "value": "admin@school.edu.vn",
+      "description": "Email tài khoản admin test",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "admin_password",
+      "value": "Admin123!",
+      "description": "Password tài khoản admin test",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "teacher_email",
+      "value": "teacher@school.edu.vn",
+      "description": "Email tài khoản teacher test",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "teacher_password",
+      "value": "Teacher123!",
+      "description": "Password tài khoản teacher test",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "student_email",
+      "value": "student@school.edu.vn",
+      "description": "Email tài khoản student test",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "student_password",
+      "value": "Student123!",
+      "description": "Password tài khoản student test",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "class_id",
+      "value": "",
+      "description": "ID của lớp học test (sẽ tự động set khi tạo lớp)",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "course_id",
+      "value": "",
+      "description": "ID của khóa học test (sẽ tự động set khi tạo khóa học)",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "lesson_id",
+      "value": "",
+      "description": "ID của bài học test (sẽ tự động set khi tạo bài học)",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "lesson_step_id",
+      "value": "",
+      "description": "ID của bước học test (sẽ tự động set khi tạo bước học)",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "h5p_content_id",
+      "value": "",
+      "description": "ID của nội dung H5P test (sẽ tự động set khi upload H5P)",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "progress_id",
+      "value": "",
+      "description": "ID của tiến độ học tập test (sẽ tự động set khi tạo progress)",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2024-10-08T10:00:00.000Z",
+  "_postman_exported_using": "Postman/10.0.0"
+}
