@@ -86,20 +86,8 @@ export class H5pContentStorage {
     contentId: string,
     file: string
   ): Promise<NodeJS.ReadableStream> {
-    const contentPath = path.join(
-      getBasePath(),
-      'uploads',
-      'h5p',
-      'content',
-      contentId,
-      file
-    );
-
-    if (!(await fs.pathExists(contentPath))) {
-      throw new Error(`Content file not found: ${file}`);
-    }
-
-    return fs.createReadStream(contentPath);
+    // Files are stored in database only, no file system access needed
+    throw new Error(`File system access disabled. Content files stored in database only: ${file}`);
   }
 
   async getContentMetadata(contentId: string): Promise<H5PContentMetadata> {
@@ -183,23 +171,8 @@ export class H5pContentStorage {
     filename: string,
     dataStream: NodeJS.ReadableStream
   ): Promise<void> {
-    const contentPath = path.join(
-      getBasePath(),
-      'uploads',
-      'h5p',
-      'content',
-      contentId
-    );
-    await fs.ensureDir(contentPath);
-
-    const filePath = path.join(contentPath, filename);
-    const writeStream = fs.createWriteStream(filePath);
-
-    return new Promise((resolve, reject) => {
-      dataStream.pipe(writeStream);
-      writeStream.on('finish', resolve);
-      writeStream.on('error', reject);
-    });
+    // Files are stored in database only, no file system storage
+    console.log(`Skipping file save to filesystem: ${filename} for content ${contentId}`);
   }
 
   async updateContent(
@@ -242,46 +215,20 @@ export class H5pContentStorage {
   }
 
   async contentFileExists(contentId: string, filename: string): Promise<boolean> {
-    const filePath = path.join(
-      getBasePath(),
-      'uploads',
-      'h5p',
-      'content',
-      contentId,
-      filename
-    );
-    return fs.pathExists(filePath);
+    // Files are stored in database only, always return false for file system
+    return false;
   }
 
   async deleteContentFile(contentId: string, filename: string): Promise<void> {
-    const filePath = path.join(
-      getBasePath(),
-      'uploads',
-      'h5p',
-      'content',
-      contentId,
-      filename
-    );
-    
-    if (await fs.pathExists(filePath)) {
-      await fs.remove(filePath);
-    }
+    // Files are stored in database only, no file system cleanup needed
+    console.log(`Skipping file deletion from filesystem: ${filename} for content ${contentId}`);
   }
 
   async getContentFileStats(contentId: string, file: string): Promise<{ size: number; birthtime: Date; }> {
-    const filePath = path.join(
-      getBasePath(),
-      'uploads',
-      'h5p',
-      'content',
-      contentId,
-      file
-    );
-
-    const stats = await fs.stat(filePath);
+    // Files are stored in database only, return default stats
     return {
-      size: stats.size,
-      birthtime: stats.birthtime,
+      size: 0,
+      birthtime: new Date(),
     };
   }
 

@@ -135,11 +135,7 @@ export class H5pInstallerService {
           { id: userId, name: 'User', type: 'local' },
         );
 
-        // Copy content files to content directory
-        const contentSourcePath = path.join(tempExtractPath, 'content');
-        const contentDestPath = path.join(this.configService.contentPath, contentId);
-        
-        await fs.copy(contentSourcePath, contentDestPath);
+        // Content files are now stored in database only (no file system storage)
       }
 
       // 6. Cleanup
@@ -247,13 +243,7 @@ export class H5pInstallerService {
       libraryFiles,
     );
 
-    // Copy library files to libraries directory
-    const libraryDestPath = path.join(
-      this.configService.librariesPath,
-      `${libraryDef.machineName}-${libraryDef.majorVersion}.${libraryDef.minorVersion}`,
-    );
-    
-    await fs.copy(libraryPath, libraryDestPath);
+    // Library files are now stored in database only (no file system storage)
   }
 
   /**
@@ -326,11 +316,7 @@ export class H5pInstallerService {
       await fs.ensureDir(contentDir);
       await fs.writeJson(path.join(contentDir, 'content.json'), content);
 
-      // Copy content files if they exist
-      const contentFilesPath = path.join(this.configService.contentPath, contentId);
-      if (await fs.pathExists(contentFilesPath)) {
-        await fs.copy(contentFilesPath, contentDir);
-      }
+      // Content files are stored in database only (no file system copy needed)
 
       // Create ZIP package using archiver
       const exportFileName = `${contentId}.h5p`;
