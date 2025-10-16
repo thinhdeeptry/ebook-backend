@@ -45,7 +45,6 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/serve-static": "^4.0.0",
     "@nestjs/swagger": "^7.1.12",
-    "@nestjs/typeorm": "^11.0.0",
     "@prisma/client": "^5.4.2",
     "@types/adm-zip": "^0.5.7",
     "@types/archiver": "^6.0.3",

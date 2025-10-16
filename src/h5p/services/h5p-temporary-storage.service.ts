@@ -35,14 +35,12 @@ export class H5pTemporaryStorage {
   }
 
   /**
-   * Ensure upload directory exists
+   * Ensure upload directory exists (disabled for serverless)
    */
   private async ensureUploadDir(): Promise<void> {
-    try {
-      await fs.access(this.uploadDir);
-    } catch {
-      await fs.mkdir(this.uploadDir, { recursive: true });
-    }
+    // Skip directory creation for serverless environments
+    // Files are stored in database only
+    console.log('Skipping upload directory creation for serverless environment');
   }
 
   /**

@@ -1,7 +1,6 @@
 import { Module, Global } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -21,15 +20,6 @@ import { PrismaService } from './common/prisma.service';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-    }),
-    TypeOrmModule.forRoot({ // Ví dụ với TypeORM
-      type: 'postgres',
-      url: process.env.DATABASE_URL, // Đọc từ biến môi trường
-      autoLoadEntities: true,
-      synchronize: true, // Chỉ dùng cho dev, không nên dùng cho production
-      ssl: {
-        rejectUnauthorized: false, // Cần thiết cho nhiều cloud database
-      },
     }),
     // Serve static files (uploads)
     // Use different paths for development vs production to avoid EROFS errors
