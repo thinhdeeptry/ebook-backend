@@ -481,6 +481,9 @@ export class H5pController {
     @Query('installContentOnly') installContentOnly?: string,
   ) {
     const fs = require('fs-extra');
+    const path = require('path');
+    
+    let tempFilePath: string | null = null;
     
     try {
       if (!file) {
@@ -491,7 +494,8 @@ export class H5pController {
         filename: file.originalname,
         size: file.size,
         mimetype: file.mimetype,
-        path: file.path,
+        hasBuffer: !!file.buffer,
+        bufferSize: file.buffer?.length || 0,
       });
 
       // Validate file extension
@@ -499,21 +503,29 @@ export class H5pController {
         throw new BadRequestException('Invalid file type. Only .h5p files are allowed');
       }
 
-      // Validate file exists and has content
-      if (!await fs.pathExists(file.path)) {
-        throw new BadRequestException('Uploaded file not found on server');
+      // Validate file buffer exists and has content
+      if (!file.buffer || file.buffer.length === 0) {
+        throw new BadRequestException('Uploaded file is empty or corrupted');
       }
 
-      const stats = await fs.stat(file.path);
-      if (stats.size === 0) {
-        throw new BadRequestException('Uploaded file is empty');
-      }
+      // Create temporary file from buffer for processing
+      const tempDir = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(process.cwd(), 'uploads', 'temp');
+      await fs.ensureDir(tempDir);
+      
+      const timestamp = Date.now();
+      const randomSuffix = Math.random().toString(36).substring(2);
+      tempFilePath = path.join(tempDir, `h5p_upload_${timestamp}_${randomSuffix}.h5p`);
+      
+      // Write buffer to temporary file
+      await fs.writeFile(tempFilePath, file.buffer);
+
+      console.log('📁 Temporary file created:', tempFilePath);
 
       // First, get package info
-      const packageInfo = await this.installerService.getH5PPackageInfo(file.path);
+      const packageInfo = await this.installerService.getH5PPackageInfo(tempFilePath);
 
       // Validate package structure
-      const validation = await this.installerService.validateH5PPackage(file.path);
+      const validation = await this.installerService.validateH5PPackage(tempFilePath);
       if (!validation.valid) {
         throw new BadRequestException({
           success: false,
@@ -524,16 +536,19 @@ export class H5pController {
 
       // Install the package
       const result = await this.installerService.uploadH5PPackage(
-        file.path,
+        tempFilePath,
         req.user.id,
         installContentOnly === 'true',
       );
 
-      // Cleanup uploaded file
-      try {
-        await fs.remove(file.path);
-      } catch (cleanupError) {
-        console.warn('Warning: Could not cleanup uploaded file:', cleanupError);
+      // Cleanup temporary file
+      if (tempFilePath) {
+        try {
+          await fs.remove(tempFilePath);
+          console.log('🧹 Temporary file cleaned up');
+        } catch (cleanupError) {
+          console.warn('Warning: Could not cleanup temporary file:', cleanupError);
+        }
       }
 
       return {
@@ -544,12 +559,13 @@ export class H5pController {
         },
       };
     } catch (error) {
-      // Cleanup uploaded file on error
-      if (file?.path) {
+      // Cleanup temporary file on error
+      if (tempFilePath) {
         try {
-          await fs.remove(file.path);
+          await fs.remove(tempFilePath);
+          console.log('🧹 Temporary file cleaned up on error');
         } catch (cleanupError) {
-          console.warn('Warning: Could not cleanup uploaded file:', cleanupError);
+          console.warn('Warning: Could not cleanup temporary file:', cleanupError);
         }
       }
       
@@ -568,6 +584,10 @@ export class H5pController {
   @Roles(Role.TEACHER, Role.ADMIN)
   @UseInterceptors(FileInterceptor('file'))
   async getPackageInfo(@UploadedFile() file: Express.Multer.File) {
+    const fs = require('fs-extra');
+    const path = require('path');
+    let tempFilePath: string | null = null;
+    
     try {
       if (!file) {
         throw new BadRequestException('No file uploaded');
@@ -577,13 +597,47 @@ export class H5pController {
         throw new BadRequestException('Invalid file type. Only .h5p files are allowed');
       }
 
-      const packageInfo = await this.installerService.getH5PPackageInfo(file.path);
+      // Validate file buffer exists and has content
+      if (!file.buffer || file.buffer.length === 0) {
+        throw new BadRequestException('Uploaded file is empty or corrupted');
+      }
+
+      // Create temporary file from buffer for processing
+      const tempDir = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(process.cwd(), 'uploads', 'temp');
+      await fs.ensureDir(tempDir);
+      
+      const timestamp = Date.now();
+      const randomSuffix = Math.random().toString(36).substring(2);
+      tempFilePath = path.join(tempDir, `h5p_info_${timestamp}_${randomSuffix}.h5p`);
+      
+      // Write buffer to temporary file
+      await fs.writeFile(tempFilePath, file.buffer);
+
+      const packageInfo = await this.installerService.getH5PPackageInfo(tempFilePath);
+
+      // Cleanup temporary file
+      if (tempFilePath) {
+        try {
+          await fs.remove(tempFilePath);
+        } catch (cleanupError) {
+          console.warn('Warning: Could not cleanup temporary file:', cleanupError);
+        }
+      }
 
       return {
         success: true,
         data: packageInfo,
       };
     } catch (error) {
+      // Cleanup temporary file on error
+      if (tempFilePath) {
+        try {
+          await fs.remove(tempFilePath);
+        } catch (cleanupError) {
+          console.warn('Warning: Could not cleanup temporary file:', cleanupError);
+        }
+      }
+      
       throw new BadRequestException({
         success: false,
         message: error.message,
