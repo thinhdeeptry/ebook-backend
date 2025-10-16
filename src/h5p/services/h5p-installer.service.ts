@@ -4,8 +4,17 @@ import { H5pContentStorage } from './h5p-content-storage.service';
 import { H5pConfigService } from './h5p-config.service';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import extract from 'extract-zip';
-import archiver from 'archiver';
+import * as extractZip from 'extract-zip';
+import * as archiver from 'archiver';
+
+// Helper functions to handle module imports correctly
+const getExtractFunction = () => {
+  return (extractZip as any).default || extractZip;
+};
+
+const getArchiverFunction = () => {
+  return (archiver as any).default || archiver;
+};
 
 export interface H5PPackageInfo {
   title: string;
@@ -73,7 +82,7 @@ export class H5pInstallerService {
       await fs.ensureDir(tempExtractPath);
       
       try {
-        await extract(filePath, { dir: path.resolve(tempExtractPath) });
+        await getExtractFunction()(filePath, { dir: path.resolve(tempExtractPath) });
         console.log('✓ Package extracted to:', tempExtractPath);
       } catch (extractError) {
         throw new Error(`Failed to extract ZIP: ${extractError.message}`);
@@ -259,7 +268,7 @@ export class H5pInstallerService {
       );
       
       await fs.ensureDir(tempReadPath);
-      await extract(filePath, { dir: path.resolve(tempReadPath) });
+      await getExtractFunction()(filePath, { dir: path.resolve(tempReadPath) });
       
       const h5pJsonPath = path.join(tempReadPath, 'h5p.json');
       if (!await fs.pathExists(h5pJsonPath)) {
@@ -353,7 +362,7 @@ export class H5pInstallerService {
       );
       
       await fs.ensureDir(tempValidatePath);
-      await extract(filePath, { dir: path.resolve(tempValidatePath) });
+      await getExtractFunction()(filePath, { dir: path.resolve(tempValidatePath) });
       
       // Check for h5p.json
       if (!await fs.pathExists(path.join(tempValidatePath, 'h5p.json'))) {
@@ -394,7 +403,7 @@ export class H5pInstallerService {
   private createZipFromDirectory(sourceDir: string, outPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const output = fs.createWriteStream(outPath);
-      const archive = archiver('zip', {
+      const archive = getArchiverFunction()('zip', {
         zlib: { level: 9 }
       });
 
