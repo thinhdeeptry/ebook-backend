@@ -17,20 +17,20 @@ import * as path from 'path';
 @Module({
   imports: [
     ConfigModule,
-    MulterModule.register({
-      storage: diskStorage({
-        destination: './uploads/h5p/temp',
-        filename: (req, file, cb) => {
-          // Generate unique filename
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-          const ext = path.extname(file.originalname);
-          cb(null, `h5p-${uniqueSuffix}${ext}`);
-        },
-      }),
-      limits: {
-        fileSize: 100 * 1024 * 1024, // 100MB
-      },
-    }),
+    // MulterModule.register({
+    //   storage: diskStorage({
+    //     destination: './uploads/h5p/temp',
+    //     filename: (req, file, cb) => {
+    //       // Generate unique filename
+    //       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    //       const ext = path.extname(file.originalname);
+    //       cb(null, `h5p-${uniqueSuffix}${ext}`);
+    //     },
+    //   }),
+    //   limits: {
+    //     fileSize: 100 * 1024 * 1024, // 100MB
+    //   },
+    // }),
   ],
   controllers: [H5pController, H5pPublicController],
   providers: [
