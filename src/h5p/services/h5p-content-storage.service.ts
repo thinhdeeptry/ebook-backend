@@ -51,10 +51,10 @@ export class H5pContentStorage {
         },
       });
 
-      // If lessonStepId is provided, update the lesson step to link to this H5P content
+      // If pageBlockId is provided, update the page block to link to this H5P content
       if (lessonStepId) {
-        await this.prisma.lessonStep.update({
-          where: { id: lessonStepId },
+        await this.prisma.pageBlock.update({
+          where: { id: lessonStepId }, // Using same variable name for compatibility
           data: { h5pContentId: h5pContent.id },
         });
       }
@@ -235,12 +235,12 @@ export class H5pContentStorage {
   // ===== LESSON-SPECIFIC METHODS =====
 
   /**
-   * Get H5P content for a specific lesson step
+   * Get H5P content for a specific page block
    */
-  async getContentByLessonStep(lessonStepId: string): Promise<any> {
+  async getContentByPageBlock(pageBlockId: string): Promise<any> {
     try {
-      const lessonStep = await this.prisma.lessonStep.findUnique({
-        where: { id: lessonStepId },
+      const pageBlock = await this.prisma.pageBlock.findUnique({
+        where: { id: pageBlockId },
         include: {
           h5pContent: {
             include: {
@@ -252,33 +252,33 @@ export class H5pContentStorage {
         }
       });
 
-      if (!lessonStep || !lessonStep.h5pContent) {
+      if (!pageBlock || !pageBlock.h5pContent) {
         return null;
       }
 
       return {
-        ...lessonStep.h5pContent,
-        lessonStep: {
-          id: lessonStep.id,
-          title: lessonStep.title,
-          order: lessonStep.order,
-          contentType: lessonStep.contentType
+        ...pageBlock.h5pContent,
+        pageBlock: {
+          id: pageBlock.id,
+          blockType: pageBlock.blockType,
+          order: pageBlock.order,
+          contentJson: pageBlock.contentJson
         }
       };
     } catch (error) {
-      throw new Error(`Failed to get content by lesson step: ${error.message}`);
+      throw new Error(`Failed to get content by page block: ${error.message}`);
     }
   }
 
   /**
-   * Get all H5P contents for a specific lesson (all lesson steps)
+   * Get all H5P contents for a specific page (all page blocks)
    */
-  async getContentByLesson(lessonId: string): Promise<any[]> {
+  async getContentByPage(pageId: string): Promise<any[]> {
     try {
-      const lessonSteps = await this.prisma.lessonStep.findMany({
+      const pageBlocks = await this.prisma.pageBlock.findMany({
         where: { 
-          lessonId: lessonId,
-          contentType: 'H5P',
+          pageId: pageId,
+          blockType: 'H5P',
           h5pContentId: { not: null }
         },
         include: {
@@ -289,37 +289,43 @@ export class H5pContentStorage {
               }
             }
           },
-          lesson: {
-            select: { id: true, title: true, description: true, order: true }
+          page: {
+            select: { id: true, title: true, order: true }
           }
         },
         orderBy: { order: 'asc' }
       });
 
-      return lessonSteps.map(step => ({
-        ...step.h5pContent,
-        lessonStep: {
-          id: step.id,
-          title: step.title,
-          order: step.order,
-          contentType: step.contentType,
-          lesson: step.lesson
+      return pageBlocks.map(block => ({
+        ...block.h5pContent,
+        pageBlock: {
+          id: block.id,
+          blockType: block.blockType,
+          order: block.order,
+          contentJson: block.contentJson,
+          page: block.page
         }
       }));
     } catch (error) {
-      throw new Error(`Failed to get contents by lesson: ${error.message}`);
+      throw new Error(`Failed to get contents by page: ${error.message}`);
     }
   }
 
   /**
    * Get all H5P contents for a specific course (all lessons)
    */
-  async getContentByCourse(courseId: string): Promise<any[]> {
+  async getContentByBook(bookId: string): Promise<any[]> {
     try {
-      const lessonSteps = await this.prisma.lessonStep.findMany({
+      const pageBlocks = await this.prisma.pageBlock.findMany({
         where: { 
-          lesson: { courseId: courseId },
-          contentType: 'H5P',
+          page: { 
+            lesson: { 
+              chapter: { 
+                bookId: bookId 
+              } 
+            } 
+          },
+          blockType: 'H5P',
           h5pContentId: { not: null }
         },
         include: {
@@ -330,73 +336,25 @@ export class H5pContentStorage {
               }
             }
           },
-          lesson: {
+          page: {
             select: { 
               id: true, 
               title: true, 
-              description: true, 
               order: true,
-              course: {
-                select: { id: true, title: true, description: true }
-              }
-            }
-          }
-        },
-        orderBy: [
-          { lesson: { order: 'asc' } },
-          { order: 'asc' }
-        ]
-      });
-
-      return lessonSteps.map(step => ({
-        ...step.h5pContent,
-        lessonStep: {
-          id: step.id,
-          title: step.title,
-          order: step.order,
-          contentType: step.contentType,
-          lesson: step.lesson
-        }
-      }));
-    } catch (error) {
-      throw new Error(`Failed to get contents by course: ${error.message}`);
-    }
-  }
-
-  /**
-   * Get all H5P contents for a specific class (all courses)
-   */
-  async getContentByClass(classId: string): Promise<any[]> {
-    try {
-      const lessonSteps = await this.prisma.lessonStep.findMany({
-        where: { 
-          lesson: { 
-            course: { classId: classId }
-          },
-          contentType: 'H5P',
-          h5pContentId: { not: null }
-        },
-        include: {
-          h5pContent: {
-            include: {
-              uploader: {
-                select: { id: true, firstName: true, lastName: true, email: true }
-              }
-            }
-          },
-          lesson: {
-            select: { 
-              id: true, 
-              title: true, 
-              description: true, 
-              order: true,
-              course: {
+              lesson: {
                 select: { 
                   id: true, 
                   title: true, 
-                  description: true,
-                  class: {
-                    select: { id: true, name: true, gradeLevel: true }
+                  order: true,
+                  chapter: {
+                    select: { 
+                      id: true, 
+                      title: true, 
+                      order: true,
+                      book: {
+                        select: { id: true, title: true, subject: true, grade: true }
+                      }
+                    }
                   }
                 }
               }
@@ -404,20 +362,107 @@ export class H5pContentStorage {
           }
         },
         orderBy: [
-          { lesson: { course: { class: { gradeLevel: 'asc' } } } },
-          { lesson: { order: 'asc' } },
+          { page: { lesson: { chapter: { order: 'asc' } } } },
+          { page: { lesson: { order: 'asc' } } },
+          { page: { order: 'asc' } },
           { order: 'asc' }
         ]
       });
 
-      return lessonSteps.map(step => ({
-        ...step.h5pContent,
-        lessonStep: {
-          id: step.id,
-          title: step.title,
-          order: step.order,
-          contentType: step.contentType,
-          lesson: step.lesson
+      return pageBlocks.map(block => ({
+        ...block.h5pContent,
+        pageBlock: {
+          id: block.id,
+          blockType: block.blockType,
+          order: block.order,
+          contentJson: block.contentJson,
+          page: block.page
+        }
+      }));
+    } catch (error) {
+      throw new Error(`Failed to get contents by book: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get all H5P contents for a specific class (all books)
+   */
+  async getContentByClass(classId: string): Promise<any[]> {
+    try {
+      const pageBlocks = await this.prisma.pageBlock.findMany({
+        where: { 
+          page: {
+            lesson: {
+              chapter: {
+                book: {
+                  classes: {
+                    some: { id: classId }
+                  }
+                }
+              }
+            }
+          },
+          blockType: 'H5P',
+          h5pContentId: { not: null }
+        },
+        include: {
+          h5pContent: {
+            include: {
+              uploader: {
+                select: { id: true, firstName: true, lastName: true, email: true }
+              }
+            }
+          },
+          page: {
+            select: { 
+              id: true, 
+              title: true, 
+              order: true,
+              lesson: {
+                select: { 
+                  id: true, 
+                  title: true, 
+                  order: true,
+                  chapter: {
+                    select: { 
+                      id: true, 
+                      title: true, 
+                      order: true,
+                      book: {
+                        select: { 
+                          id: true, 
+                          title: true, 
+                          subject: true,
+                          grade: true,
+                          classes: {
+                            select: { id: true, name: true, gradeLevel: true }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        orderBy: [
+          { page: { lesson: { chapter: { book: { grade: 'asc' } } } } },
+          { page: { lesson: { chapter: { order: 'asc' } } } },
+          { page: { lesson: { order: 'asc' } } },
+          { page: { order: 'asc' } },
+          { order: 'asc' }
+        ]
+      });
+
+      return pageBlocks.map(block => ({
+        ...block.h5pContent,
+        pageBlock: {
+          id: block.id,
+          blockType: block.blockType,
+          order: block.order,
+          contentJson: block.contentJson,
+          page: block.page
         }
       }));
     } catch (error) {

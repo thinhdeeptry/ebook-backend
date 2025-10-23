@@ -46,7 +46,7 @@ export class StudentProgressController {
     @Param('userId') userId: string,
     @Request() req,
   ) {
-    return this.studentProgressService.getStudentProgress(
+    return this.studentProgressService.getUserProgress(
       userId,
       req.user.id,
       req.user.role,
@@ -55,7 +55,7 @@ export class StudentProgressController {
 
   @Get('my-progress')
   async getMyProgress(@Request() req) {
-    return this.studentProgressService.getStudentProgress(
+    return this.studentProgressService.getUserProgress(
       req.user.id,
       req.user.id,
       req.user.role,
@@ -67,11 +67,7 @@ export class StudentProgressController {
     @Query() filters: ProgressSummaryDto,
     @Request() req,
   ) {
-    return this.studentProgressService.getProgressSummary(
-      filters,
-      req.user.id,
-      req.user.role,
-    );
+    return this.studentProgressService.getProgressSummary(filters);
   }
 
   @Get('lesson/:lessonId')
@@ -79,10 +75,9 @@ export class StudentProgressController {
     @Param('lessonId') lessonId: string,
     @Request() req,
   ) {
-    return this.studentProgressService.getLessonProgress(
+    return this.studentProgressService.getProgressByLesson(
       lessonId,
       req.user.id,
-      req.user.role,
     );
   }
 
@@ -92,25 +87,31 @@ export class StudentProgressController {
     return { message: 'Chi tiết tiến độ học tập', id };
   }
 
-  @Patch(':id')
+  @Patch(':userId/:pageBlockId')
   async updateProgress(
-    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Param('pageBlockId') pageBlockId: string,
     @Body() updateProgressDto: UpdateStudentProgressDto,
     @Request() req,
   ) {
     return this.studentProgressService.updateProgress(
-      id,
+      userId,
+      pageBlockId,
       updateProgressDto,
       req.user.id,
       req.user.role,
     );
   }
 
-  @Delete(':id')
+  @Delete(':userId/:pageBlockId')
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removeProgress(@Param('id') id: string, @Request() req) {
-    return this.studentProgressService.removeProgress(id, req.user.role);
+  async removeProgress(
+    @Param('userId') userId: string,
+    @Param('pageBlockId') pageBlockId: string,
+    @Request() req
+  ) {
+    return this.studentProgressService.deleteProgress(userId, pageBlockId, req.user.id, req.user.role);
   }
 
   // Quiz Attempts endpoints

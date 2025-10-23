@@ -27,7 +27,7 @@ export class ClassesService {
           _count: {
             select: {
               memberships: true,
-              courses: true,
+              books: true,
             },
           },
         },
@@ -53,7 +53,7 @@ export class ClassesService {
           _count: {
             select: {
               memberships: true,
-              courses: true,
+              books: true,
             },
           },
         } : undefined,
@@ -76,7 +76,7 @@ export class ClassesService {
           _count: {
             select: {
               memberships: true,
-              courses: true,
+              books: true,
             },
           },
         },
@@ -123,7 +123,7 @@ export class ClassesService {
           _count: {
             select: {
               memberships: true,
-              courses: true,
+              books: true,
             },
           },
         },
@@ -143,17 +143,21 @@ export class ClassesService {
   }
 
   /**
-   * Lấy thông tin lớp học bao gồm danh sách khóa học
+   * Lấy thông tin lớp học bao gồm danh sách sách
    */
-  async getClassWithCourses(classId: string) {
+  async getClassWithBooks(classId: string) {
     try {
-      const classWithCourses = await this.prisma.class.findUnique({
+      const classWithBooks = await this.prisma.class.findUnique({
         where: { id: classId },
         include: {
-          courses: {
+          books: {
             include: {
-              _count: {
-                select: { lessons: true },
+              chapters: {
+                include: {
+                  _count: {
+                    select: { lessons: true },
+                  },
+                },
               },
             },
             orderBy: { createdAt: 'desc' },
@@ -161,22 +165,22 @@ export class ClassesService {
           _count: {
             select: {
               memberships: true,
-              courses: true,
+              books: true,
             },
           },
         },
       });
 
-      if (!classWithCourses) {
+      if (!classWithBooks) {
         throw new NotFoundException(`Không tìm thấy lớp học có ID: ${classId}`);
       }
 
-      return classWithCourses;
+      return classWithBooks;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new BadRequestException(`Không thể lấy danh sách khóa học: ${error.message}`);
+      throw new BadRequestException(`Không thể lấy danh sách sách: ${error.message}`);
     }
   }
 
@@ -209,7 +213,7 @@ export class ClassesService {
           _count: {
             select: {
               memberships: true,
-              courses: true,
+              books: true,
             },
           },
         },
@@ -232,14 +236,18 @@ export class ClassesService {
       // Kiểm tra lớp học có tồn tại không
       await this.getClassById(classId);
 
-      // Kiểm tra xem có khóa học nào đang sử dụng lớp này không
-      const coursesCount = await this.prisma.course.count({
-        where: { classId },
+      // Kiểm tra xem có sách nào đang gán cho lớp này không
+      const booksCount = await this.prisma.book.count({
+        where: { 
+          classes: {
+            some: { id: classId }
+          }
+        },
       });
 
-      if (coursesCount > 0) {
+      if (booksCount > 0) {
         throw new ConflictException(
-          `Không thể xóa lớp học này vì có ${coursesCount} khóa học đang sử dụng`
+          `Không thể xóa lớp học này vì có ${booksCount} sách đang được gán cho lớp`
         );
       }
 

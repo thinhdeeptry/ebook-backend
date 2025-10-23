@@ -6,9 +6,9 @@ export class CreateStudentProgressDto {
   @IsString({ message: 'ID người dùng phải là chuỗi ký tự' })
   userId: string;
 
-  @IsNotEmpty({ message: 'ID bước học không được để trống' })
-  @IsString({ message: 'ID bước học phải là chuỗi ký tự' })
-  lessonStepId: string;
+  @IsNotEmpty({ message: 'ID khối trang không được để trống' })
+  @IsString({ message: 'ID khối trang phải là chuỗi ký tự' })
+  pageBlockId: string;
 
   @IsOptional()
   @IsEnum(ProgressStatus, { message: 'Trạng thái tiến độ phải là NOT_STARTED, IN_PROGRESS, hoặc COMPLETED' })
@@ -63,10 +63,14 @@ export class ProgressSummaryDto {
   classId?: string;
 
   @IsOptional()
-  @IsString({ message: 'ID khóa học phải là chuỗi ký tự' })
-  courseId?: string;
+  @IsString({ message: 'ID sách phải là chuỗi ký tự' })
+  bookId?: string;
 
   @IsOptional()
   @IsString({ message: 'ID bài học phải là chuỗi ký tự' })
   lessonId?: string;
+
+  @IsOptional()
+  @IsString({ message: 'ID trang phải là chuỗi ký tự' })
+  pageId?: string;
 }

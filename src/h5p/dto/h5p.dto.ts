@@ -22,7 +22,7 @@ export class CreateH5PContentDto {
 
   @IsString()
   @IsOptional()
-  lessonStepId?: string; // Optional - for linking to lesson step
+  pageBlockId?: string; // Optional - for linking to page block
 }
 
 export class UpdateH5PContentDto {
@@ -48,5 +48,5 @@ export class UpdateH5PContentDto {
 
   @IsString()
   @IsOptional()
-  lessonStepId?: string; // Optional - for linking to lesson step
+  pageBlockId?: string; // Optional - for linking to page block
 }

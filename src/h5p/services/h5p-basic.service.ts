@@ -717,47 +717,47 @@ export class H5pService implements OnModuleInit {
   // ===== LESSON-SPECIFIC METHODS =====
 
   /**
-   * Get H5P content for a specific lesson step
+   * Get H5P content for a specific page block
    */
-  async getContentByLessonStep(lessonStepId: string): Promise<any> {
+  async getContentByPageBlock(pageBlockId: string): Promise<any> {
     await this.ensureInitialized();
 
     try {
-      const content = await this.contentStorage.getContentByLessonStep(lessonStepId);
+      const content = await this.contentStorage.getContentByPageBlock(pageBlockId);
       return content;
     } catch (error) {
-      console.error('Error getting content by lesson step:', error);
-      throw new Error(`Failed to get content by lesson step: ${error.message}`);
+      console.error('Error getting content by page block:', error);
+      throw new Error(`Failed to get content by page block: ${error.message}`);
     }
   }
 
   /**
-   * Get all H5P contents for a specific lesson (all lesson steps)
+   * Get all H5P contents for a specific page (all page blocks)
    */
-  async getContentByLesson(lessonId: string): Promise<any[]> {
+  async getContentByPage(pageId: string): Promise<any[]> {
     await this.ensureInitialized();
 
     try {
-      const contents = await this.contentStorage.getContentByLesson(lessonId);
+      const contents = await this.contentStorage.getContentByPage(pageId);
       return contents;
     } catch (error) {
-      console.error('Error getting contents by lesson:', error);
-      throw new Error(`Failed to get contents by lesson: ${error.message}`);
+      console.error('Error getting contents by page:', error);
+      throw new Error(`Failed to get contents by page: ${error.message}`);
     }
   }
 
   /**
-   * Get all H5P contents for a specific course (all lessons)
+   * Get all H5P contents for a specific book (all pages)
    */
-  async getContentByCourse(courseId: string): Promise<any[]> {
+  async getContentByBook(bookId: string): Promise<any[]> {
     await this.ensureInitialized();
 
     try {
-      const contents = await this.contentStorage.getContentByCourse(courseId);
+      const contents = await this.contentStorage.getContentByBook(bookId);
       return contents;
     } catch (error) {
-      console.error('Error getting contents by course:', error);
-      throw new Error(`Failed to get contents by course: ${error.message}`);
+      console.error('Error getting contents by book:', error);
+      throw new Error(`Failed to get contents by book: ${error.message}`);
     }
   }
 

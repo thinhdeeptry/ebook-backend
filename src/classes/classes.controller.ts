@@ -21,7 +21,7 @@ import {
   AddStudentToClassDto,
   ClassResponseDto,
   ClassWithMembersDto,
-  ClassWithCoursesDto,
+  ClassWithBooksDto,
 } from './dto/class.dto';
 
 @Controller('classes')
@@ -74,13 +74,13 @@ export class ClassesController {
   }
 
   /**
-   * Lấy thông tin lớp học bao gồm danh sách khóa học
+   * Lấy thông tin lớp học bao gồm danh sách sách
    */
-  @Get(':classId/courses')
-  async getClassWithCourses(
+  @Get(':classId/books')
+  async getClassWithBooks(
     @Param('classId') classId: string
-  ): Promise<ClassWithCoursesDto> {
-    return this.classesService.getClassWithCourses(classId);
+  ) {
+    return this.classesService.getClassWithBooks(classId);
   }
 
   /**

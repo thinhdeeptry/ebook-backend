@@ -49,7 +49,7 @@ export class ClassResponseDto {
   updatedAt: Date;
   _count?: {
     memberships: number;
-    courses: number;
+    books: number;
   };
 }
 
@@ -67,16 +67,20 @@ export class ClassWithMembersDto extends ClassResponseDto {
   }[];
 }
 
-export class ClassWithCoursesDto extends ClassResponseDto {
-  courses: {
+export class ClassWithBooksDto extends ClassResponseDto {
+  books: {
     id: string;
     title: string;
     description?: string;
     thumbnailUrl?: string;
     isPublished: boolean;
     createdAt: Date;
-    _count?: {
-      lessons: number;
-    };
+    chapters: {
+      id: string;
+      title: string;
+      _count?: {
+        lessons: number;
+      };
+    }[];
   }[];
 }

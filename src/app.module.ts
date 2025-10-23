@@ -7,9 +7,8 @@ import { UsersModule } from './users/users.module';
 import { H5pModule } from './h5p/h5p.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { ClassesModule } from './classes/classes.module';
-import { CoursesModule } from './courses/courses.module';
+import { BooksModule } from './books/books.module';
 import { LessonsModule } from './lessons/lessons.module';
-import { LessonStepsModule } from './lesson-steps/lesson-steps.module';
 import { StudentProgressModule } from './student-progress/student-progress.module';
 import { PrismaService } from './common/prisma.service';
 
@@ -38,9 +37,8 @@ import { PrismaService } from './common/prisma.service';
     
     // Educational management modules
     ClassesModule,
-    CoursesModule,
+    BooksModule,
     LessonsModule,
-    LessonStepsModule,
     StudentProgressModule,
   ],
   providers: [PrismaService],

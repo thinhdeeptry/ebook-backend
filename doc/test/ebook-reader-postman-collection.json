@@ -1,0 +1,1155 @@
+{
+  "info": {
+    "name": "E-book Reader System - API Collection (Refactored)",
+    "description": "Collection để test các API modules của hệ thống E-book Reader với cấu trúc mới: Books, Chapters, Lessons, Pages, PageBlocks, StudentProgress và H5P Integration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "ebook-reader-api-collection-refactored",
+    "version": "2.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "class_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "book_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "chapter_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lesson_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "page_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "page_block_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "h5p_content_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "progress_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Đăng ký tài khoản Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\",\n  \"firstName\": \"Nguyễn\",\n  \"lastName\": \"Quản trị\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Đăng ký tài khoản Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{teacher_email}}\",\n  \"password\": \"{{teacher_password}}\",\n  \"firstName\": \"Nguyễn\",\n  \"lastName\": \"Giáo viên\",\n  \"role\": \"TEACHER\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Đăng ký tài khoản Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{student_email}}\",\n  \"password\": \"{{student_password}}\",\n  \"firstName\": \"Nguyễn\",\n  \"lastName\": \"Học sinh\",\n  \"role\": \"STUDENT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Đăng nhập Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201 || responseCode.code === 200) {",
+                  "  const response = pm.response.json();",
+                  "  pm.environment.set('jwt_token', response.access_token);",
+                  "  pm.environment.set('user_id', response.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Xem thông tin cá nhân",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏫 Classes API",
+      "item": [
+        {
+          "name": "Tạo lớp học mới",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.environment.set('class_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lớp 1A\",\n  \"gradeLevel\": 1,\n  \"description\": \"Lớp 1A năm học 2024-2025\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/classes",
+              "host": ["{{base_url}}"],
+              "path": ["classes"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách tất cả lớp học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/classes",
+              "host": ["{{base_url}}"],
+              "path": ["classes"]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin chi tiết lớp học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/classes/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "{{class_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách sách theo lớp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/classes/{{class_id}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "{{class_id}}", "books"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách học sinh trong lớp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/classes/{{class_id}}/members",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "{{class_id}}", "members"]
+            }
+          }
+        },
+        {
+          "name": "Thêm học sinh vào lớp",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/classes/{{class_id}}/students",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "{{class_id}}", "students"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật thông tin lớp học",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lớp 1A - Cập nhật\",\n  \"description\": \"Lớp 1A năm học 2024-2025 - Đã cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/classes/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["classes", "{{class_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📚 Books API",
+      "item": [
+        {
+          "name": "Tạo sách mới",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.environment.set('book_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Toán học Lớp 1\",\n  \"subject\": \"Toán học\",\n  \"grade\": 1,\n  \"description\": \"Sách giáo khoa Toán học dành cho học sinh lớp 1\",\n  \"thumbnailUrl\": \"https://example.com/math-grade1-thumbnail.jpg\",\n  \"isPublished\": false,\n  \"classIds\": [\"{{class_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["books"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách tất cả sách",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books?grade=1&subject=Toán học",
+              "host": ["{{base_url}}"],
+              "path": ["books"],
+              "query": [
+                {
+                  "key": "grade",
+                  "value": "1"
+                },
+                {
+                  "key": "subject",
+                  "value": "Toán học"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin chi tiết sách",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books/{{book_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["books", "{{book_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy sách theo lớp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books/class/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["books", "class", "{{class_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Tìm kiếm sách",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books/search?keyword=Toán&grade=1",
+              "host": ["{{base_url}}"],
+              "path": ["books", "search"],
+              "query": [
+                {
+                  "key": "keyword",
+                  "value": "Toán"
+                },
+                {
+                  "key": "grade",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật thông tin sách",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Toán học Lớp 1 - Phiên bản mới\",\n  \"description\": \"Sách giáo khoa Toán học dành cho học sinh lớp 1 - Cập nhật 2024\",\n  \"isPublished\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/books/{{book_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["books", "{{book_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Xuất bản sách",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books/{{book_id}}/publish",
+              "host": ["{{base_url}}"],
+              "path": ["books", "{{book_id}}", "publish"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📖 Lessons API",
+      "item": [
+        {
+          "name": "Tạo bài học mới",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.environment.set('lesson_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bài 1: Đếm từ 1 đến 10\",\n  \"description\": \"Học sinh sẽ học cách đếm các số từ 1 đến 10\",\n  \"bookId\": \"{{book_id}}\",\n  \"chapterId\": \"{{chapter_id}}\",\n  \"order\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lessons",
+              "host": ["{{base_url}}"],
+              "path": ["lessons"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách bài học theo sách",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lessons/book/{{book_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "book", "{{book_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách bài học theo chương",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lessons/chapter/{{chapter_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "chapter", "{{chapter_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin chi tiết bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lessons/{{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "{{lesson_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Tìm kiếm bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lessons/search?keyword=Đếm&bookId={{book_id}}&chapterId={{chapter_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "search"],
+              "query": [
+                {
+                  "key": "keyword",
+                  "value": "Đếm"
+                },
+                {
+                  "key": "bookId",
+                  "value": "{{book_id}}"
+                },
+                {
+                  "key": "chapterId",
+                  "value": "{{chapter_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật thông tin bài học",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bài 1: Đếm từ 1 đến 10 - Cập nhật\",\n  \"description\": \"Học sinh sẽ học cách đếm các số từ 1 đến 10 - Mô tả cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/lessons/{{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lessons", "{{lesson_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📄 Pages API",
+      "item": [
+        {
+          "name": "Tạo trang mới",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.environment.set('page_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Trang 1: Giới thiệu số đếm\",\n  \"lessonId\": \"{{lesson_id}}\",\n  \"order\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/pages",
+              "host": ["{{base_url}}"],
+              "path": ["pages"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách trang theo bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pages/lesson/{{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["pages", "lesson", "{{lesson_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin chi tiết trang",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pages/{{page_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["pages", "{{page_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧩 PageBlocks API",
+      "item": [
+        {
+          "name": "Tạo Page Block TEXT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.environment.set('page_block_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageId\": \"{{page_id}}\",\n  \"blockType\": \"TEXT\",\n  \"order\": 1,\n  \"contentJson\": {\n    \"text\": \"# Số đếm là gì?\\n\\nSố đếm là những con số chúng ta dùng để đếm các vật xung quanh.\\n\\n- 1, 2, 3, 4, 5\\n- 6, 7, 8, 9, 10\",\n    \"format\": \"markdown\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/page-blocks",
+              "host": ["{{base_url}}"],
+              "path": ["page-blocks"]
+            }
+          }
+        },
+        {
+          "name": "Tạo Page Block VIDEO",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageId\": \"{{page_id}}\",\n  \"blockType\": \"VIDEO\",\n  \"order\": 2,\n  \"contentJson\": {\n    \"videoUrl\": \"https://youtube.com/watch?v=counting123\",\n    \"title\": \"Video hướng dẫn đếm số\",\n    \"duration\": 300\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/page-blocks",
+              "host": ["{{base_url}}"],
+              "path": ["page-blocks"]
+            }
+          }
+        },
+        {
+          "name": "Tạo Page Block H5P",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageId\": \"{{page_id}}\",\n  \"blockType\": \"H5P\",\n  \"order\": 3,\n  \"h5pContentId\": \"{{h5p_content_id}}\",\n  \"contentJson\": {\n    \"title\": \"Quiz đếm số tương tác\",\n    \"description\": \"Bài tập kiểm tra khả năng đếm số\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/page-blocks",
+              "host": ["{{base_url}}"],
+              "path": ["page-blocks"]
+            }
+          }
+        },
+        {
+          "name": "Lấy tất cả Page Blocks của trang",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/page-blocks/page/{{page_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["page-blocks", "page", "{{page_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin chi tiết Page Block",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/page-blocks/{{page_block_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["page-blocks", "{{page_block_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật Page Block",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contentJson\": {\n    \"text\": \"# Số đếm là gì? (Cập nhật)\\n\\nSố đếm là những con số quan trọng trong toán học.\",\n    \"format\": \"markdown\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/page-blocks/{{page_block_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["page-blocks", "{{page_block_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 StudentProgress API",
+      "item": [
+        {
+          "name": "Tạo tiến độ học tập",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.environment.set('progress_id', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"pageBlockId\": \"{{page_block_id}}\",\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/student-progress",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress"]
+            }
+          }
+        },
+        {
+          "name": "Lấy tiến độ của học sinh",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/student-progress/user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "user", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy tiến độ của tôi",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/student-progress/my-progress",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "my-progress"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật tiến độ",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/student-progress/{{user_id}}/{{page_block_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "{{user_id}}", "{{page_block_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy tiến độ theo bài học",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/student-progress/lesson/{{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "lesson", "{{lesson_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Thống kê tiến độ tổng quan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/student-progress/summary?userId={{user_id}}&lessonId={{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "summary"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}"
+                },
+                {
+                  "key": "lessonId",
+                  "value": "{{lesson_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tạo lần thử quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentProgressId\": \"{{progress_id}}\",\n  \"score\": 85.5,\n  \"isPass\": true,\n  \"statement\": {\n    \"actor\": { \"name\": \"Nguyễn Văn An\" },\n    \"verb\": { \"display\": { \"en-US\": \"completed\" } },\n    \"object\": { \"definition\": { \"name\": { \"en-US\": \"Counting Quiz\" } } },\n    \"result\": { \"score\": { \"scaled\": 0.855 }, \"completion\": true, \"success\": true }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/student-progress/quiz-attempt",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "quiz-attempt"]
+            }
+          }
+        },
+        {
+          "name": "Lấy lịch sử quiz attempts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/student-progress/{{progress_id}}/quiz-attempts",
+              "host": ["{{base_url}}"],
+              "path": ["student-progress", "{{progress_id}}", "quiz-attempts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎮 H5P API",
+      "item": [
+        {
+          "name": "Upload H5P package",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  if (response.data && response.data.contentId) {",
+                  "    pm.environment.set('h5p_content_id', response.data.contentId);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Upload file H5P (.h5p)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/h5p/upload",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách H5P content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/content",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "content"]
+            }
+          }
+        },
+        {
+          "name": "Lấy chi tiết H5P content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/content/{{h5p_content_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "content", "{{h5p_content_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy H5P player integration",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/player/{{h5p_content_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "player", "{{h5p_content_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Lấy H5P theo Page Block",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/page-block/{{page_block_id}}/content",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "page-block", "{{page_block_id}}", "content"]
+            }
+          }
+        },
+        {
+          "name": "Tạo H5P content cho Page Block",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Quiz đếm số\",\n  \"library\": \"H5P.QuestionSet 1.17\",\n  \"params\": {\n    \"introPage\": {\n      \"showIntroPage\": true,\n      \"title\": \"Quiz đếm số từ 1 đến 10\"\n    },\n    \"questions\": [\n      {\n        \"library\": \"H5P.MultiChoice 1.14\",\n        \"params\": {\n          \"question\": \"Số nào đứng sau số 5?\",\n          \"answers\": [\n            { \"correct\": false, \"text\": \"4\" },\n            { \"correct\": true, \"text\": \"6\" },\n            { \"correct\": false, \"text\": \"3\" }\n          ]\n        }\n      }\n    ]\n  },\n  \"metadata\": {\n    \"title\": \"Quiz đếm số\",\n    \"authors\": [{ \"name\": \"Teacher\", \"role\": \"Author\" }]\n  },\n  \"isPublic\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/h5p/page-block/{{page_block_id}}/content",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "page-block", "{{page_block_id}}", "content"]
+            }
+          }
+        },
+        {
+          "name": "Lấy H5P theo Page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/page/{{page_id}}/content",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "page", "{{page_id}}", "content"]
+            }
+          }
+        },
+        {
+          "name": "Lấy H5P theo Book",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/book/{{book_id}}/content",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "book", "{{book_id}}", "content"]
+            }
+          }
+        },
+        {
+          "name": "Lấy H5P theo Class",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/class/{{class_id}}/content",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "class", "{{class_id}}", "content"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật H5P content",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Quiz đếm số - Cập nhật\",\n  \"isPublic\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/h5p/content/{{h5p_content_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "content", "{{h5p_content_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Xóa H5P content",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/h5p/content/{{h5p_content_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["h5p", "content", "{{h5p_content_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Users API",
+      "item": [
+        {
+          "name": "Lấy danh sách người dùng",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Lấy thông tin người dùng",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật thông tin người dùng",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Nguyễn\",\n  \"lastName\": \"Quản trị cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

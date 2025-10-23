@@ -16,8 +16,12 @@ export class CreateLessonDto {
   order: number;
 
   @IsString()
-  @IsNotEmpty({ message: 'ID khóa học không được để trống' })
-  courseId: string;
+  @IsOptional()
+  chapterId?: string;
+
+  @IsString()
+  @IsOptional()
+  bookId?: string;
 }
 
 export class UpdateLessonDto {
@@ -37,7 +41,11 @@ export class UpdateLessonDto {
 
   @IsString()
   @IsOptional()
-  courseId?: string;
+  chapterId?: string;
+
+  @IsString()
+  @IsOptional()
+  bookId?: string;
 }
 
 export class ReorderLessonsDto {
@@ -51,58 +59,66 @@ export class LessonResponseDto {
   title: string;
   description?: string;
   order: number;
-  courseId: string;
+  chapterId?: string;
+  bookId?: string;
   createdAt: Date;
   updatedAt: Date;
   _count?: {
-    steps: number;
+    pages: number;
   };
 }
 
-export class LessonWithCourseDto extends LessonResponseDto {
-  course: {
-    id: string;
-    title: string;
-    description?: string;
-    isPublished: boolean;
-    class: {
-      id: string;
-      name: string;
-      gradeLevel: number;
-    };
-  };
-}
-
-export class LessonWithStepsDto extends LessonResponseDto {
-  steps: {
+export class LessonWithBookDto extends LessonResponseDto {
+  chapter?: {
     id: string;
     title: string;
     order: number;
-    contentType: 'TEXT' | 'VIDEO' | 'H5P';
-    contentJson?: any;
-    h5pContentId?: string;
-    h5pContent?: {
+  };
+  book?: {
+    id: string;
+    title: string;
+    subject: string;
+    grade: number;
+    description?: string;
+    isPublished: boolean;
+  };
+}
+
+export class LessonWithPagesDto extends LessonResponseDto {
+  pages: {
+    id: string;
+    title?: string;
+    order: number;
+    layout?: string;
+    blocks: {
       id: string;
-      title: string;
-      library: string;
-    };
+      order: number;
+      blockType: 'TEXT' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'H5P';
+      contentJson?: any;
+      h5pContentId?: string;
+    }[];
   }[];
 }
 
-export class LessonDetailDto extends LessonWithCourseDto {
-  steps: {
+export class LessonDetailDto extends LessonWithBookDto {
+  pages: {
     id: string;
-    title: string;
+    title?: string;
     order: number;
-    contentType: 'TEXT' | 'VIDEO' | 'H5P';
-    contentJson?: any;
-    h5pContentId?: string;
-    h5pContent?: {
+    layout?: string;
+    blocks: {
       id: string;
-      title: string;
-      library: string;
-      isPublic: boolean;
-    };
+      order: number;
+      blockType: 'TEXT' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'H5P';
+      contentJson?: any;
+      h5pContentId?: string;
+      h5pContent?: {
+        id: string;
+        title: string;
+        library: string;
+        isPublic: boolean;
+      };
+    }[];
   }[];
 }
 
@@ -116,7 +132,12 @@ export class NavigationResponseDto {
   current: LessonNavigationDto;
   previous?: LessonNavigationDto | null;
   next?: LessonNavigationDto | null;
-  course: {
+  book?: {
+    id: string;
+    title: string;
+    totalLessons: number;
+  };
+  chapter?: {
     id: string;
     title: string;
     totalLessons: number;

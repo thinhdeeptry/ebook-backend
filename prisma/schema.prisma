@@ -1,5 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// ===============================================
+// Prisma Schema cho Nền tảng SGK Điện Tử
+// ===============================================
 
 generator client {
   provider = "prisma-client-js"
@@ -9,6 +10,10 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ===============================================
+// User & Role
+// ===============================================
 
 enum Role {
   STUDENT
@@ -29,8 +34,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relationships
-  classMemberships  ClassMembership[] // Mối quan hệ với các lớp học
-  studentProgress   StudentProgress[] // Toàn bộ tiến độ học tập
+  classMemberships  ClassMembership[]
+  studentProgress   StudentProgress[]
   uploadedH5p       H5PContent[]       @relation("H5PUploader")
   trackingEvents    TrackingEvent[]    @relation("TrackingActor")
   uploadedLibraries H5PLibrary[]       @relation("H5PLibraryUploader")
@@ -39,30 +44,30 @@ model User {
   @@map("users")
 }
 
-// MỚI: Model cho các khối lớp (Lớp 1, Lớp 2...)
+// ===============================================
+// Classes (Lớp học) & Enrollments
+// ===============================================
+
 model Class {
   id          String   @id @default(cuid())
-  name        String // Ví dụ: "Lớp 1", "Lớp 2"
-  gradeLevel  Int      @unique // Số 1, 2, 3... để sort
+  name        String
+  gradeLevel  Int      @unique
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relationships
   memberships ClassMembership[]
-  courses     Course[]
+  books       Book[]  @relation("BookClasses")
 
   @@map("classes")
 }
 
-// MỚI: Bảng ghi danh học sinh vào lớp
 model ClassMembership {
   id       String   @id @default(cuid())
   userId   String
   classId  String
   joinedAt DateTime @default(now())
 
-  // Relationships
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   class Class @relation(fields: [classId], references: [id], onDelete: Cascade)
 
@@ -71,116 +76,138 @@ model ClassMembership {
 }
 
 // ===============================================
-// Course and Lesson Structure
+// BOOK STRUCTURE (Book → Chapter → Lesson → Page → PageBlock)
 // ===============================================
 
-// CHỈNH SỬA: Khóa học giờ thuộc về một Class
-model Course {
+model Book {
   id           String   @id @default(cuid())
-  title        String // Ví dụ: "Toán Lớp 1"
+  title        String
+  subject      String
+  grade        Int
   description  String?
-  thumbnailUrl String?
+  coverImage   String?
+  publisher    String?
   isPublished  Boolean  @default(false)
-  classId      String   @default("123") // Liên kết với lớp học
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Relationships
-  class   Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
-  lessons Lesson[]
+  chapters Chapter[]
+  lessons  Lesson[]
+  classes  Class[] @relation("BookClasses")
 
-  @@map("courses")
+  @@map("books")
 }
 
-// MỚI: Model cho từng bài học trong một khóa học
+model Chapter {
+  id          String   @id @default(cuid())
+  title       String
+  order       Int
+  bookId      String
+  description String?
+
+  book    Book    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@map("chapters")
+}
+
 model Lesson {
   id          String   @id @default(cuid())
-  title       String // Ví dụ: "Bài 1: Phép cộng trong phạm vi 10"
+  title       String
   description String?
-  order       Int // Thứ tự của bài học trong khóa học
-  courseId    String
+  order       Int
+  chapterId   String?
+  bookId      String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relationships
-  course Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  steps  LessonStep[]
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  book    Book?    @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  pages   Page[]
 
   @@map("lessons")
 }
 
-// MỚI: Enum cho các loại nội dung trong một bài học
-enum LessonStepType {
+model Page {
+  id        String   @id @default(cuid())
+  lessonId  String
+  order     Int
+  title     String?
+  layout    String? // one-column, two-column, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  blocks PageBlock[]
+
+  @@map("pages")
+}
+
+enum PageBlockType {
   TEXT
+  IMAGE
   VIDEO
+  AUDIO
   H5P
 }
 
-// MỚI: Model cho từng bước/hoạt động trong một bài học
-model LessonStep {
-  id           String         @id @default(cuid())
-  title        String
-  order        Int // Thứ tự của bước trong bài học
-  contentType  LessonStepType // Loại nội dung: TEXT, VIDEO, hoặc H5P
-  contentJson  Json? // Nội dung cho TEXT (markdown) hoặc VIDEO (url, etc.)
-  lessonId     String
-  h5pContentId String? // Liên kết trực tiếp nếu là H5P
+model PageBlock {
+  id           String        @id @default(cuid())
+  pageId       String
+  order        Int
+  blockType    PageBlockType
+  contentJson  Json?
+  h5pContentId String?
 
-  // Relationships
-  lesson          Lesson            @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  h5pContent      H5PContent?       @relation(fields: [h5pContentId], references: [id], onDelete: SetNull)
-  studentProgress StudentProgress[]
+  page       Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  h5pContent H5PContent? @relation(fields: [h5pContentId], references: [id], onDelete: SetNull)
+  progress   StudentProgress[]
 
-  @@map("lesson_steps")
+  @@map("page_blocks")
 }
 
 // ===============================================
-// Student Progress Tracking
+// STUDENT PROGRESS TRACKING
 // ===============================================
 
-// MỚI: Enum cho trạng thái tiến độ
 enum ProgressStatus {
   NOT_STARTED
   IN_PROGRESS
   COMPLETED
 }
 
-// MỚI: Theo dõi trạng thái hoàn thành của học sinh trên từng LessonStep
 model StudentProgress {
   id           String         @id @default(cuid())
   userId       String
-  lessonStepId String
+  pageBlockId  String
   status       ProgressStatus @default(NOT_STARTED)
   completedAt  DateTime?
   lastAccessed DateTime       @updatedAt
 
-  // Relationships
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lessonStep   LessonStep    @relation(fields: [lessonStepId], references: [id], onDelete: Cascade)
-  quizAttempts QuizAttempt[] // Lịch sử các lần làm quiz cho bước này
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageBlock   PageBlock   @relation(fields: [pageBlockId], references: [id], onDelete: Cascade)
+  quizAttempts QuizAttempt[]
 
-  @@unique([userId, lessonStepId])
+  @@unique([userId, pageBlockId])
   @@map("student_progress")
 }
 
-// MỚI: Ghi lại mỗi lần học sinh làm quiz
 model QuizAttempt {
   id                String   @id @default(cuid())
   studentProgressId String
   attemptNumber     Int
-  score             Float? // Điểm số đạt được
-  isPass            Boolean // Đạt hay không đạt
-  statement         Json? // Có thể lưu xAPI statement cuối cùng của lần làm bài
+  score             Float?
+  isPass            Boolean
+  statement         Json?
   submittedAt       DateTime @default(now())
 
-  // Relationships
   studentProgress StudentProgress @relation(fields: [studentProgressId], references: [id], onDelete: Cascade)
 
   @@map("quiz_attempts")
 }
 
 // ===============================================
-// H5P and Other Models (Chỉnh sửa nhẹ)
+// H5P CONTENT & TRACKING
 // ===============================================
 
 model H5PContent {
@@ -195,10 +222,9 @@ model H5PContent {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  // Relationships
   uploader       User            @relation("H5PUploader", fields: [uploaderId], references: [id], onDelete: Cascade)
   trackingEvents TrackingEvent[] @relation("H5PTracking")
-  lessonSteps    LessonStep[] // Mối quan hệ ngược lại với LessonStep
+  pageBlocks     PageBlock[]     // Link từ các block SGK
 
   @@map("h5p_contents")
 }
@@ -214,7 +240,6 @@ model TrackingEvent {
   context   Json?
   timestamp DateTime @default(now())
 
-  // Relationships
   actor   User        @relation("TrackingActor", fields: [actorId], references: [id], onDelete: Cascade)
   content H5PContent? @relation("H5PTracking", fields: [contentId], references: [id], onDelete: SetNull)
 
@@ -223,25 +248,24 @@ model TrackingEvent {
 
 model H5PLibrary {
   id            String   @id @default(cuid())
-  machineName   String // Library machine name (e.g., "H5P.InteractiveVideo")
-  majorVersion  Int // Major version
-  minorVersion  Int // Minor version
-  patchVersion  Int // Patch version
-  title         String // Human-readable title
-  description   String? // Library description
-  author        String? // Library author
-  license       String? // License type
-  libraryJson   Json // Complete library.json content
-  semanticsJson Json? // Semantics definition
-  languageJson  Json? // Language files
-  files         Json? // Associated files (CSS, JS, etc.)
-  dependencies  Json? // Library dependencies
+  machineName   String
+  majorVersion  Int
+  minorVersion  Int
+  patchVersion  Int
+  title         String
+  description   String?
+  author        String?
+  license       String?
+  libraryJson   Json
+  semanticsJson Json?
+  languageJson  Json?
+  files         Json?
+  dependencies  Json?
   isPublic      Boolean  @default(true)
-  uploaderId    String? // User who uploaded custom library
+  uploaderId    String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  // Relationships
   uploader User? @relation("H5PLibraryUploader", fields: [uploaderId], references: [id], onDelete: SetNull)
 
   @@unique([machineName, majorVersion, minorVersion, patchVersion])
@@ -250,9 +274,9 @@ model H5PLibrary {
 
 model H5PContentLibrary {
   id             String @id @default(cuid())
-  contentId      String // References H5PContent.id
-  libraryId      String // References H5PLibrary.id  
-  dependencyType String // "preloaded", "dynamic", "editor"
+  contentId      String
+  libraryId      String
+  dependencyType String // preloaded, dynamic, editor
 
   @@unique([contentId, libraryId, dependencyType])
   @@map("h5p_content_libraries")
@@ -260,15 +284,14 @@ model H5PContentLibrary {
 
 model H5PTemporaryFile {
   id        String   @id @default(cuid())
-  filename  String // Original filename
-  path      String // File path on disk
-  size      BigInt // File size in bytes
-  mimetype  String // MIME type
-  userId    String // User who uploaded the file
+  filename  String
+  path      String
+  size      BigInt
+  mimetype  String
+  userId    String
   createdAt DateTime @default(now())
-  expiresAt DateTime // When the file should be deleted
+  expiresAt DateTime
 
-  // Relationships
   user User @relation("H5PTemporaryFileUploader", fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("h5p_temporary_files")

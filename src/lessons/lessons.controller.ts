@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
@@ -18,16 +19,17 @@ import { LessonsService } from './lessons.service';
 import {
   CreateLessonDto,
   UpdateLessonDto,
-  ReorderLessonsDto,
   LessonResponseDto,
-  LessonWithCourseDto,
-  LessonWithStepsDto,
+  LessonWithBookDto,
+  LessonWithPagesDto,
   LessonDetailDto,
   NavigationResponseDto,
 } from './dto/lesson.dto';
 
+@ApiTags('Lessons - Quản lý bài học')
 @Controller('lessons')
 @UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
 export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}
 
@@ -38,7 +40,11 @@ export class LessonsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
-  async createLesson(@Body() createLessonDto: CreateLessonDto): Promise<LessonWithCourseDto> {
+  @ApiOperation({ summary: 'Tạo bài học mới' })
+  @ApiResponse({ status: 201, description: 'Tạo bài học thành công' })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy sách hoặc chương' })
+  async createLesson(@Body() createLessonDto: CreateLessonDto): Promise<LessonWithBookDto> {
     return this.lessonsService.createLesson(createLessonDto);
   }
 
@@ -46,101 +52,117 @@ export class LessonsController {
    * Tìm kiếm bài học
    */
   @Get('search')
+  @ApiOperation({ summary: 'Tìm kiếm bài học theo từ khóa' })
+  @ApiResponse({ status: 200, description: 'Tìm kiếm thành công' })
   async searchLessons(
     @Query('keyword') keyword: string,
-    @Query('courseId') courseId?: string
-  ): Promise<LessonWithCourseDto[]> {
-    if (!keyword || keyword.trim() === '') {
-      return [];
-    }
-
-    return this.lessonsService.searchLessons(keyword.trim(), courseId);
+    @Query('bookId') bookId?: string,
+    @Query('chapterId') chapterId?: string,
+  ): Promise<LessonWithBookDto[]> {
+    return this.lessonsService.searchLessons(keyword, bookId, chapterId);
   }
 
   /**
-   * Lấy bài học theo khóa học
+   * Lấy danh sách bài học theo sách
    */
-  @Get('by-course/:courseId')
-  async getLessonsByCourse(
-    @Param('courseId') courseId: string
-  ): Promise<LessonResponseDto[]> {
-    return this.lessonsService.getLessonsByCourse(courseId);
+  @Get('book/:bookId')
+  @ApiOperation({ summary: 'Lấy danh sách bài học theo sách' })
+  @ApiResponse({ status: 200, description: 'Lấy danh sách thành công' })
+  async getLessonsByBook(@Param('bookId') bookId: string): Promise<LessonResponseDto[]> {
+    return this.lessonsService.getLessonsByBook(bookId);
+  }
+
+  /**
+   * Lấy danh sách bài học theo chương
+   */
+  @Get('chapter/:chapterId')
+  @ApiOperation({ summary: 'Lấy danh sách bài học theo chương' })
+  @ApiResponse({ status: 200, description: 'Lấy danh sách thành công' })
+  async getLessonsByChapter(@Param('chapterId') chapterId: string): Promise<LessonResponseDto[]> {
+    return this.lessonsService.getLessonsByChapter(chapterId);
   }
 
   /**
    * Lấy thông tin chi tiết bài học
    */
-  @Get(':lessonId')
-  async getLessonById(@Param('lessonId') lessonId: string): Promise<LessonWithCourseDto> {
-    return this.lessonsService.getLessonById(lessonId);
+  @Get(':id')
+  @ApiOperation({ summary: 'Lấy thông tin chi tiết bài học' })
+  @ApiResponse({ status: 200, description: 'Lấy thông tin thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài học' })
+  async getLessonById(@Param('id') id: string): Promise<LessonWithBookDto> {
+    return this.lessonsService.getLessonById(id);
   }
 
   /**
-   * Lấy bài học với danh sách các bước học
+   * Lấy bài học với danh sách trang
    */
-  @Get(':lessonId/steps')
-  async getLessonWithSteps(@Param('lessonId') lessonId: string): Promise<LessonDetailDto> {
-    return this.lessonsService.getLessonWithSteps(lessonId);
+  @Get(':id/pages')
+  @ApiOperation({ summary: 'Lấy bài học với nội dung các trang' })
+  @ApiResponse({ status: 200, description: 'Lấy nội dung thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài học' })
+  async getLessonWithPages(@Param('id') id: string): Promise<LessonDetailDto> {
+    return this.lessonsService.getLessonWithPages(id);
   }
 
   /**
-   * Lấy thông tin navigation cho bài học (trước/sau)
+   * Lấy navigation của bài học (trước/sau)
    */
-  @Get(':lessonId/navigation')
-  async getLessonNavigation(@Param('lessonId') lessonId: string): Promise<NavigationResponseDto> {
-    return this.lessonsService.getLessonNavigation(lessonId);
+  @Get(':id/navigation')
+  @ApiOperation({ summary: 'Lấy thông tin navigation bài học' })
+  @ApiResponse({ status: 200, description: 'Lấy navigation thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài học' })
+  async getLessonNavigation(@Param('id') id: string): Promise<NavigationResponseDto> {
+    return this.lessonsService.getLessonNavigation(id);
   }
 
   /**
-   * Cập nhật thông tin bài học
+   * Cập nhật bài học
    * Chỉ admin và giáo viên mới có thể cập nhật
    */
-  @Put(':lessonId')
+  @Put(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @ApiOperation({ summary: 'Cập nhật thông tin bài học' })
+  @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài học' })
   async updateLesson(
-    @Param('lessonId') lessonId: string,
-    @Body() updateLessonDto: UpdateLessonDto
-  ): Promise<LessonWithCourseDto> {
-    return this.lessonsService.updateLesson(lessonId, updateLessonDto);
-  }
-
-  /**
-   * Sao chép bài học
-   * Chỉ admin và giáo viên mới có thể thực hiện
-   */
-  @Post(':lessonId/duplicate')
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.TEACHER)
-  async duplicateLesson(
-    @Param('lessonId') lessonId: string,
-    @Body('newTitle') newTitle?: string
-  ): Promise<LessonWithCourseDto> {
-    return this.lessonsService.duplicateLesson(lessonId, newTitle);
-  }
-
-  /**
-   * Sắp xếp lại thứ tự các bài học trong khóa học
-   * Chỉ admin và giáo viên mới có thể thực hiện
-   */
-  @Patch('course/:courseId/reorder')
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.TEACHER)
-  async reorderLessons(
-    @Param('courseId') courseId: string,
-    @Body() reorderDto: ReorderLessonsDto
-  ) {
-    return this.lessonsService.reorderLessons(courseId, reorderDto.lessonIds);
+    @Param('id') id: string,
+    @Body() updateLessonDto: UpdateLessonDto,
+  ): Promise<LessonWithBookDto> {
+    return this.lessonsService.updateLesson(id, updateLessonDto);
   }
 
   /**
    * Xóa bài học
    * Chỉ admin mới có thể xóa
    */
-  @Delete(':lessonId')
+  @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  async deleteLesson(@Param('lessonId') lessonId: string) {
-    return this.lessonsService.deleteLesson(lessonId);
+  @ApiOperation({ summary: 'Xóa bài học' })
+  @ApiResponse({ status: 200, description: 'Xóa thành công' })
+  @ApiResponse({ status: 400, description: 'Không thể xóa do có trang đang sử dụng' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài học' })
+  async deleteLesson(@Param('id') id: string): Promise<{ message: string }> {
+    return this.lessonsService.deleteLesson(id);
+  }
+
+  /**
+   * Sắp xếp lại thứ tự bài học
+   * Chỉ admin và giáo viên mới có thể sắp xếp lại
+   */
+  @Patch('reorder')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.TEACHER)
+  @ApiOperation({ summary: 'Sắp xếp lại thứ tự bài học' })
+  @ApiResponse({ status: 200, description: 'Sắp xếp lại thành công' })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
+  async reorderLessons(
+    @Body('lessonIds') lessonIds: string[],
+    @Query('chapterId') chapterId?: string,
+    @Query('bookId') bookId?: string,
+  ): Promise<{ message: string }> {
+    return this.lessonsService.reorderLessons(lessonIds, chapterId, bookId);
   }
 }

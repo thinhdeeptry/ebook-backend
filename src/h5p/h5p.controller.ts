@@ -118,7 +118,7 @@ export class H5pController {
           isPublic: createContentDto.isPublic,
         },
         createContentDto.title,
-        createContentDto.lessonStepId, // Pass lesson step ID
+        createContentDto.pageBlockId, // Pass page block ID
       );
 
       return {
@@ -126,7 +126,7 @@ export class H5pController {
         data: {
           contentId,
           message: 'Content created successfully',
-          lessonStepId: createContentDto.lessonStepId,
+          pageBlockId: createContentDto.pageBlockId,
         },
       };
     } catch (error) {
@@ -175,7 +175,7 @@ export class H5pController {
           isPublic: updateContentDto.isPublic,
         },
         updateContentDto.title,
-        updateContentDto.lessonStepId,
+        updateContentDto.pageBlockId,
       );
 
       return {
@@ -733,15 +733,15 @@ export class H5pController {
     }
   }
 
-  // ===== LESSON-SPECIFIC ENDPOINTS =====
+  // ===== PAGE BLOCK SPECIFIC ENDPOINTS =====
 
   /**
-   * Get H5P content for a specific lesson step
+   * Get H5P content for a specific page block
    */
-  @Get('lesson-step/:lessonStepId/content')
-  async getContentByLessonStep(@Param('lessonStepId') lessonStepId: string) {
+  @Get('page-block/:pageBlockId/content')
+  async getContentByPageBlock(@Param('pageBlockId') pageBlockId: string) {
     try {
-      const content = await this.h5pService.getContentByLessonStep(lessonStepId);
+      const content = await this.h5pService.getContentByPageBlock(pageBlockId);
       return {
         success: true,
         data: content,
@@ -755,13 +755,13 @@ export class H5pController {
   }
 
   /**
-   * Create H5P content directly for a lesson step
+   * Create H5P content directly for a page block
    */
-  @Post('lesson-step/:lessonStepId/content')
+  @Post('page-block/:pageBlockId/content')
   @UseGuards(RolesGuard)
   @Roles(Role.TEACHER, Role.ADMIN)
-  async createContentForLessonStep(
-    @Param('lessonStepId') lessonStepId: string,
+  async createContentForPageBlock(
+    @Param('pageBlockId') pageBlockId: string,
     @Body() createContentDto: CreateH5PContentDto,
     @Request() req: any,
   ) {
@@ -781,7 +781,7 @@ export class H5pController {
         });
       }
 
-      // Set the lessonStepId from URL parameter
+      // Set the pageBlockId from URL parameter
       const contentId = await this.h5pService.createContent(
         req.user.id,
         {
@@ -791,15 +791,15 @@ export class H5pController {
           isPublic: createContentDto.isPublic,
         },
         createContentDto.title,
-        lessonStepId,
+        pageBlockId,
       );
 
       return {
         success: true,
         data: {
           contentId,
-          lessonStepId,
-          message: 'Content created and linked to lesson step successfully',
+          pageBlockId,
+          message: 'Content created and linked to page block successfully',
         },
       };
     } catch (error) {
@@ -811,12 +811,12 @@ export class H5pController {
   }
 
   /**
-   * Get all H5P contents for a specific lesson (all lesson steps)
+   * Get all H5P contents for a specific page (all page blocks)
    */
-  @Get('lesson/:lessonId/content')
-  async getContentByLesson(@Param('lessonId') lessonId: string) {
+  @Get('page/:pageId/content')
+  async getContentByPage(@Param('pageId') pageId: string) {
     try {
-      const contents = await this.h5pService.getContentByLesson(lessonId);
+      const contents = await this.h5pService.getContentByPage(pageId);
       return {
         success: true,
         data: contents,
@@ -830,12 +830,12 @@ export class H5pController {
   }
 
   /**
-   * Get all H5P contents for a specific course (all lessons)
+   * Get all H5P contents for a specific book (all pages)
    */
-  @Get('course/:courseId/content')
-  async getContentByCourse(@Param('courseId') courseId: string) {
+  @Get('book/:bookId/content')
+  async getContentByBook(@Param('bookId') bookId: string) {
     try {
-      const contents = await this.h5pService.getContentByCourse(courseId);
+      const contents = await this.h5pService.getContentByBook(bookId);
       return {
         success: true,
         data: contents,
@@ -849,7 +849,7 @@ export class H5pController {
   }
 
   /**
-   * Get all H5P contents for a specific class (all courses)
+   * Get all H5P contents for a specific class (all books)
    */
   @Get('class/:classId/content')
   async getContentByClass(@Param('classId') classId: string) {

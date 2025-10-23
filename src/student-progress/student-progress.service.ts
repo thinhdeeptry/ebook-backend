@@ -15,24 +15,37 @@ export class StudentProgressService {
 
   // Tạo tiến độ học sinh mới
   async createProgress(createProgressDto: CreateStudentProgressDto, currentUserId?: string, currentUserRole?: Role) {
-    const { userId, lessonStepId, status = ProgressStatus.NOT_STARTED } = createProgressDto;
+    const { userId, pageBlockId, status = ProgressStatus.NOT_STARTED } = createProgressDto;
 
     // Kiểm tra quyền: chỉ ADMIN/TEACHER hoặc chính học sinh mới có thể tạo tiến độ
     if (currentUserRole !== Role.ADMIN && currentUserRole !== Role.TEACHER && currentUserId !== userId) {
       throw new ForbiddenException('Bạn không có quyền tạo tiến độ cho người dùng khác');
     }
 
-    // Kiểm tra user và lessonStep có tồn tại không
-    const [user, lessonStep] = await Promise.all([
+    // Kiểm tra user và pageBlock có tồn tại không
+    const [user, pageBlock] = await Promise.all([
       this.prisma.user.findUnique({ where: { id: userId } }),
-      this.prisma.lessonStep.findUnique({ 
-        where: { id: lessonStepId },
+      this.prisma.pageBlock.findUnique({ 
+        where: { id: pageBlockId },
         include: {
-          lesson: {
+          page: {
             include: {
-              course: {
+              lesson: {
                 include: {
-                  class: true,
+                  book: {
+                    include: {
+                      classes: true,
+                    },
+                  },
+                  chapter: {
+                    include: {
+                      book: {
+                        include: {
+                          classes: true,
+                        },
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -44,41 +57,49 @@ export class StudentProgressService {
     if (!user) {
       throw new NotFoundException('Không tìm thấy người dùng');
     }
-    if (!lessonStep) {
-      throw new NotFoundException('Không tìm thấy bước học');
+    if (!pageBlock) {
+      throw new NotFoundException('Không tìm thấy khối trang');
     }
 
-    // Kiểm tra học sinh có trong lớp của khóa học không
-    const classMembership = await this.prisma.classMembership.findFirst({
+    // Kiểm tra học sinh có trong lớp của sách không
+    if (user.role === Role.STUDENT) {
+      const userClasses = await this.prisma.classMembership.findMany({
+        where: { userId },
+        select: { classId: true },
+      });
+      const userClassIds = userClasses.map(c => c.classId);
+
+      const bookClasses = pageBlock.page.lesson.book?.classes || 
+                         pageBlock.page.lesson.chapter?.book?.classes || [];
+      const bookClassIds = bookClasses.map(c => c.id);
+
+      const hasAccess = userClassIds.some(classId => bookClassIds.includes(classId));
+      if (!hasAccess) {
+        throw new ForbiddenException('Học sinh không có quyền truy cập sách này');
+      }
+    }
+
+    // Kiểm tra tiến độ đã tồn tại chưa
+    const existingProgress = await this.prisma.studentProgress.findUnique({
       where: {
-        userId,
-        classId: lessonStep.lesson.course.classId,
+        userId_pageBlockId: {
+          userId,
+          pageBlockId,
+        },
       },
     });
 
-    if (!classMembership && currentUserRole === Role.STUDENT) {
-      throw new ForbiddenException('Bạn không thuộc lớp học của bài học này');
+    if (existingProgress) {
+      throw new BadRequestException('Tiến độ học tập cho khối trang này đã tồn tại');
     }
 
-    // Tạo tiến độ (nếu chưa tồn tại)
-    return this.prisma.studentProgress.upsert({
-      where: {
-        userId_lessonStepId: {
-          userId,
-          lessonStepId,
-        },
-      },
-      update: {
-        status,
-        lastAccessed: new Date(),
-        ...(status === ProgressStatus.COMPLETED && { completedAt: new Date() }),
-      },
-      create: {
+    // Tạo tiến độ mới
+    const progress = await this.prisma.studentProgress.create({
+      data: {
         userId,
-        lessonStepId,
+        pageBlockId,
         status,
-        lastAccessed: new Date(),
-        ...(status === ProgressStatus.COMPLETED && { completedAt: new Date() }),
+        completedAt: status === ProgressStatus.COMPLETED ? new Date() : null,
       },
       include: {
         user: {
@@ -89,97 +110,70 @@ export class StudentProgressService {
             email: true,
           },
         },
-        lessonStep: {
-          select: {
-            id: true,
-            title: true,
-            contentType: true,
-            lesson: {
-              select: {
-                id: true,
-                title: true,
-                course: {
+        pageBlock: {
+          include: {
+            page: {
+              include: {
+                lesson: {
                   select: {
                     id: true,
                     title: true,
-                    class: {
-                      select: {
-                        id: true,
-                        name: true,
-                      },
-                    },
+                    order: true,
                   },
                 },
+              },
+            },
+            h5pContent: {
+              select: {
+                id: true,
+                title: true,
+                library: true,
               },
             },
           },
         },
       },
     });
+
+    return progress;
   }
 
-  // Lấy tiến độ của một học sinh
-  async getStudentProgress(userId: string, currentUserId?: string, currentUserRole?: Role) {
+  // Cập nhật tiến độ học sinh
+  async updateProgress(
+    userId: string, 
+    pageBlockId: string, 
+    updateProgressDto: UpdateStudentProgressDto,
+    currentUserId?: string,
+    currentUserRole?: Role
+  ) {
     // Kiểm tra quyền
     if (currentUserRole !== Role.ADMIN && currentUserRole !== Role.TEACHER && currentUserId !== userId) {
-      throw new ForbiddenException('Bạn không có quyền xem tiến độ của người dùng khác');
+      throw new ForbiddenException('Bạn không có quyền cập nhật tiến độ của người dùng khác');
     }
 
-    return this.prisma.studentProgress.findMany({
-      where: { userId },
+    // Tìm tiến độ hiện tại
+    const existingProgress = await this.prisma.studentProgress.findUnique({
+      where: {
+        userId_pageBlockId: {
+          userId,
+          pageBlockId,
+        },
+      },
       include: {
-        lessonStep: {
-          select: {
-            id: true,
-            title: true,
-            contentType: true,
-            order: true,
-            lesson: {
-              select: {
-                id: true,
-                title: true,
-                order: true,
-                course: {
+        pageBlock: {
+          include: {
+            page: {
+              include: {
+                lesson: {
                   select: {
                     id: true,
                     title: true,
-                    class: {
-                      select: {
-                        id: true,
-                        name: true,
-                      },
-                    },
                   },
                 },
               },
             },
           },
         },
-        quizAttempts: {
-          select: {
-            id: true,
-            attemptNumber: true,
-            score: true,
-            isPass: true,
-            submittedAt: true,
-          },
-          orderBy: { submittedAt: 'desc' },
-        },
-      },
-      orderBy: [
-        { lessonStep: { lesson: { course: { class: { gradeLevel: 'asc' } } } } },
-        { lessonStep: { lesson: { order: 'asc' } } },
-        { lessonStep: { order: 'asc' } },
-      ],
-    });
-  }
-
-  // Cập nhật tiến độ
-  async updateProgress(id: string, updateProgressDto: UpdateStudentProgressDto, currentUserId?: string, currentUserRole?: Role) {
-    const existingProgress = await this.prisma.studentProgress.findUnique({
-      where: { id },
-      include: {
-        user: { select: { id: true } },
       },
     });
 
@@ -187,224 +181,179 @@ export class StudentProgressService {
       throw new NotFoundException('Không tìm thấy tiến độ học tập');
     }
 
-    // Kiểm tra quyền
-    if (currentUserRole !== Role.ADMIN && currentUserRole !== Role.TEACHER && currentUserId !== existingProgress.user.id) {
-      throw new ForbiddenException('Bạn không có quyền cập nhật tiến độ của người dùng khác');
-    }
-
-    const { status } = updateProgressDto;
-
-    return this.prisma.studentProgress.update({
-      where: { id },
-      data: {
-        ...(status && { status }),
-        lastAccessed: new Date(),
-        ...(status === ProgressStatus.COMPLETED && { completedAt: new Date() }),
-      },
-      include: {
-        lessonStep: {
-          select: {
-            id: true,
-            title: true,
-            contentType: true,
-          },
+    // Cập nhật tiến độ
+    const updatedProgress = await this.prisma.studentProgress.update({
+      where: {
+        userId_pageBlockId: {
+          userId,
+          pageBlockId,
         },
       },
-    });
-  }
-
-  // Tạo lần thử quiz
-  async createQuizAttempt(createAttemptDto: CreateQuizAttemptDto, currentUserId?: string, currentUserRole?: Role) {
-    const { studentProgressId, score, isPass, statement } = createAttemptDto;
-
-    const studentProgress = await this.prisma.studentProgress.findUnique({
-      where: { id: studentProgressId },
-      include: {
-        user: { select: { id: true } },
-        quizAttempts: { select: { attemptNumber: true } },
-      },
-    });
-
-    if (!studentProgress) {
-      throw new NotFoundException('Không tìm thấy tiến độ học tập');
-    }
-
-    // Kiểm tra quyền
-    if (currentUserRole !== Role.ADMIN && currentUserRole !== Role.TEACHER && currentUserId !== studentProgress.user.id) {
-      throw new ForbiddenException('Bạn không có quyền tạo lần thử cho người dùng khác');
-    }
-
-    // Tính số lần thử tiếp theo
-    const maxAttempt = Math.max(...studentProgress.quizAttempts.map(a => a.attemptNumber), 0);
-    const nextAttemptNumber = maxAttempt + 1;
-
-    return this.prisma.quizAttempt.create({
       data: {
-        studentProgressId,
-        attemptNumber: nextAttemptNumber,
-        score,
-        isPass,
-        statement,
+        ...updateProgressDto,
+        completedAt: updateProgressDto.status === ProgressStatus.COMPLETED 
+          ? (existingProgress.completedAt || new Date())
+          : updateProgressDto.status === ProgressStatus.NOT_STARTED || updateProgressDto.status === ProgressStatus.IN_PROGRESS
+          ? null
+          : existingProgress.completedAt,
       },
       include: {
-        studentProgress: {
+        user: {
           select: {
             id: true,
-            status: true,
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        pageBlock: {
+          include: {
+            page: {
+              include: {
+                lesson: {
+                  select: {
+                    id: true,
+                    title: true,
+                    order: true,
+                  },
+                },
               },
             },
-            lessonStep: {
+            h5pContent: {
               select: {
                 id: true,
                 title: true,
+                library: true,
               },
             },
           },
         },
       },
     });
+
+    return updatedProgress;
   }
 
-  // Lấy lịch sử quiz attempts
-  async getQuizAttempts(studentProgressId: string, currentUserId?: string, currentUserRole?: Role) {
-    const studentProgress = await this.prisma.studentProgress.findUnique({
-      where: { id: studentProgressId },
-      include: {
-        user: { select: { id: true } },
-      },
-    });
-
-    if (!studentProgress) {
-      throw new NotFoundException('Không tìm thấy tiến độ học tập');
-    }
-
+  // Lấy tiến độ theo user và pageBlock
+  async getProgress(userId: string, pageBlockId: string, currentUserId?: string, currentUserRole?: Role) {
     // Kiểm tra quyền
-    if (currentUserRole !== Role.ADMIN && currentUserRole !== Role.TEACHER && currentUserId !== studentProgress.user.id) {
-      throw new ForbiddenException('Bạn không có quyền xem lịch sử quiz của người dùng khác');
+    if (currentUserRole !== Role.ADMIN && currentUserRole !== Role.TEACHER && currentUserId !== userId) {
+      throw new ForbiddenException('Bạn không có quyền xem tiến độ của người dùng khác');
     }
 
-    return this.prisma.quizAttempt.findMany({
-      where: { studentProgressId },
-      orderBy: { submittedAt: 'desc' },
+    const progress = await this.prisma.studentProgress.findUnique({
+      where: {
+        userId_pageBlockId: {
+          userId,
+          pageBlockId,
+        },
+      },
       include: {
-        studentProgress: {
+        user: {
           select: {
-            lessonStep: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        pageBlock: {
+          include: {
+            page: {
+              include: {
+                lesson: {
+                  select: {
+                    id: true,
+                    title: true,
+                    order: true,
+                  },
+                },
+              },
+            },
+            h5pContent: {
               select: {
                 id: true,
                 title: true,
-                contentType: true,
+                library: true,
               },
             },
           },
         },
+        quizAttempts: {
+          orderBy: { submittedAt: 'desc' },
+        },
       },
     });
+
+    if (!progress) {
+      throw new NotFoundException('Không tìm thấy tiến độ học tập');
+    }
+
+    return progress;
   }
 
-  // Thống kê tiến độ tổng quan
-  async getProgressSummary(filters?: ProgressSummaryDto, currentUserId?: string, currentUserRole?: Role) {
-    let whereCondition: any = {};
-
-    // Xử lý quyền truy cập
-    if (currentUserRole === Role.STUDENT) {
-      whereCondition.userId = currentUserId;
-    } else if (filters?.userId) {
-      whereCondition.userId = filters.userId;
+  // Lấy tất cả tiến độ của một user
+  async getUserProgress(userId: string, currentUserId?: string, currentUserRole?: Role) {
+    // Kiểm tra quyền
+    if (currentUserRole !== Role.ADMIN && currentUserRole !== Role.TEACHER && currentUserId !== userId) {
+      throw new ForbiddenException('Bạn không có quyền xem tiến độ của người dùng khác');
     }
 
-    // Thêm các filter khác
-    if (filters?.lessonId) {
-      whereCondition.lessonStep = {
-        lessonId: filters.lessonId,
-      };
-    } else if (filters?.courseId) {
-      whereCondition.lessonStep = {
-        lesson: {
-          courseId: filters.courseId,
-        },
-      };
-    } else if (filters?.classId) {
-      whereCondition.lessonStep = {
-        lesson: {
-          course: {
-            classId: filters.classId,
+    const progress = await this.prisma.studentProgress.findMany({
+      where: { userId },
+      include: {
+        pageBlock: {
+          include: {
+            page: {
+              include: {
+                lesson: {
+                  select: {
+                    id: true,
+                    title: true,
+                    order: true,
+                  },
+                },
+              },
+            },
+            h5pContent: {
+              select: {
+                id: true,
+                title: true,
+                library: true,
+              },
+            },
           },
         },
-      };
-    }
-
-    const [totalProgress, progressByStatus, completedCount] = await Promise.all([
-      // Tổng số tiến độ
-      this.prisma.studentProgress.count({
-        where: whereCondition,
-      }),
-
-      // Phân loại theo trạng thái
-      this.prisma.studentProgress.groupBy({
-        by: ['status'],
-        where: whereCondition,
-        _count: {
-          id: true,
+        quizAttempts: {
+          orderBy: { submittedAt: 'desc' },
+          take: 1, // Lấy attempt gần nhất
         },
-      }),
+      },
+      orderBy: [
+        { pageBlock: { page: { lesson: { order: 'asc' } } } },
+        { pageBlock: { page: { order: 'asc' } } },
+        { pageBlock: { order: 'asc' } },
+      ],
+    });
 
-      // Số lượng hoàn thành
-      this.prisma.studentProgress.count({
-        where: {
-          ...whereCondition,
-          status: ProgressStatus.COMPLETED,
-          completedAt: { not: null },
-        },
-      }),
-    ]);
-
-    return {
-      totalProgress,
-      progressByStatus: progressByStatus.reduce((acc, item) => {
-        acc[item.status] = item._count.id;
-        return acc;
-      }, {}),
-      completionRate: totalProgress > 0 ? 
-        ((progressByStatus.find(p => p.status === ProgressStatus.COMPLETED)?._count.id || 0) / totalProgress * 100) : 0,
-    };
+    return progress;
   }
 
   // Lấy tiến độ theo bài học
-  async getLessonProgress(lessonId: string, currentUserId?: string, currentUserRole?: Role) {
-    // Kiểm tra bài học có tồn tại không
-    const lesson = await this.prisma.lesson.findUnique({
-      where: { id: lessonId },
-      include: {
-        course: {
-          include: {
-            class: true,
-          },
+  async getProgressByLesson(lessonId: string, userId?: string) {
+    const whereCondition: any = {
+      pageBlock: {
+        page: {
+          lessonId,
         },
-      },
-    });
-
-    if (!lesson) {
-      throw new NotFoundException('Không tìm thấy bài học');
-    }
-
-    let whereCondition: any = {
-      lessonStep: {
-        lessonId,
       },
     };
 
-    // Nếu là học sinh, chỉ xem tiến độ của mình
-    if (currentUserRole === Role.STUDENT) {
-      whereCondition.userId = currentUserId;
+    if (userId) {
+      whereCondition.userId = userId;
     }
 
-    return this.prisma.studentProgress.findMany({
+    const progress = await this.prisma.studentProgress.findMany({
       where: whereCondition,
       include: {
         user: {
@@ -415,51 +364,227 @@ export class StudentProgressService {
             email: true,
           },
         },
-        lessonStep: {
-          select: {
-            id: true,
-            title: true,
-            order: true,
-            contentType: true,
+        pageBlock: {
+          include: {
+            page: {
+              select: {
+                id: true,
+                title: true,
+                order: true,
+              },
+            },
+            h5pContent: {
+              select: {
+                id: true,
+                title: true,
+                library: true,
+              },
+            },
           },
         },
         quizAttempts: {
-          select: {
-            id: true,
-            attemptNumber: true,
-            score: true,
-            isPass: true,
-            submittedAt: true,
-          },
           orderBy: { submittedAt: 'desc' },
-          take: 1, // Chỉ lấy lần thử gần nhất
+          take: 1,
         },
       },
       orderBy: [
-        { lessonStep: { order: 'asc' } },
-        { user: { lastName: 'asc' } },
+        { pageBlock: { page: { order: 'asc' } } },
+        { pageBlock: { order: 'asc' } },
       ],
     });
+
+    return progress;
   }
 
-  // Xóa tiến độ (chỉ ADMIN)
-  async removeProgress(id: string, currentUserRole?: Role) {
-    if (currentUserRole !== Role.ADMIN) {
-      throw new ForbiddenException('Chỉ quản trị viên mới có quyền xóa tiến độ học tập');
+  // Lấy tóm tắt tiến độ
+  async getProgressSummary(filters: ProgressSummaryDto) {
+    const { userId, classId, bookId, lessonId, pageId } = filters;
+
+    // Build where condition
+    let whereCondition: any = {};
+
+    if (userId) {
+      whereCondition.userId = userId;
     }
 
-    const progress = await this.prisma.studentProgress.findUnique({
-      where: { id },
+    if (pageId) {
+      whereCondition.pageBlock = {
+        pageId,
+      };
+    } else if (lessonId) {
+      whereCondition.pageBlock = {
+        page: {
+          lessonId,
+        },
+      };
+    } else if (bookId) {
+      whereCondition.pageBlock = {
+        page: {
+          lesson: {
+            OR: [
+              { bookId },
+              { chapter: { bookId } },
+            ],
+          },
+        },
+      };
+    }
+
+    if (classId) {
+      whereCondition.user = {
+        classMemberships: {
+          some: {
+            classId,
+          },
+        },
+      };
+    }
+
+    const [totalProgress, completedProgress, inProgressProgress] = await Promise.all([
+      this.prisma.studentProgress.count({
+        where: whereCondition,
+      }),
+      this.prisma.studentProgress.count({
+        where: {
+          ...whereCondition,
+          status: ProgressStatus.COMPLETED,
+        },
+      }),
+      this.prisma.studentProgress.count({
+        where: {
+          ...whereCondition,
+          status: ProgressStatus.IN_PROGRESS,
+        },
+      }),
+    ]);
+
+    const notStartedProgress = totalProgress - completedProgress - inProgressProgress;
+    const completionRate = totalProgress > 0 ? (completedProgress / totalProgress) * 100 : 0;
+
+    return {
+      total: totalProgress,
+      completed: completedProgress,
+      inProgress: inProgressProgress,
+      notStarted: notStartedProgress,
+      completionRate: Math.round(completionRate * 100) / 100, // Round to 2 decimal places
+    };
+  }
+
+  // Tạo quiz attempt
+  async createQuizAttempt(createAttemptDto: CreateQuizAttemptDto, currentUserId?: string, currentUserRole?: Role) {
+    const { studentProgressId, score, isPass, statement } = createAttemptDto;
+
+    // Tìm student progress
+    const studentProgress = await this.prisma.studentProgress.findUnique({
+      where: { id: studentProgressId },
+      include: {
+        user: true,
+        quizAttempts: {
+          orderBy: { attemptNumber: 'desc' },
+          take: 1,
+        },
+      },
     });
 
-    if (!progress) {
+    if (!studentProgress) {
       throw new NotFoundException('Không tìm thấy tiến độ học tập');
     }
 
-    await this.prisma.studentProgress.delete({
-      where: { id },
+    // Kiểm tra quyền
+    if (currentUserRole !== Role.ADMIN && currentUserRole !== Role.TEACHER && currentUserId !== studentProgress.userId) {
+      throw new ForbiddenException('Bạn không có quyền tạo attempt cho tiến độ này');
+    }
+
+    // Tính attempt number
+    const attemptNumber = studentProgress.quizAttempts.length > 0 
+      ? studentProgress.quizAttempts[0].attemptNumber + 1 
+      : 1;
+
+    // Tạo quiz attempt
+    const quizAttempt = await this.prisma.quizAttempt.create({
+      data: {
+        studentProgressId,
+        attemptNumber,
+        score,
+        isPass,
+        statement,
+      },
     });
 
-    return { message: 'Đã xóa tiến độ học tập thành công' };
+    // Cập nhật trạng thái tiến độ nếu pass
+    if (isPass && studentProgress.status !== ProgressStatus.COMPLETED) {
+      await this.prisma.studentProgress.update({
+        where: { id: studentProgressId },
+        data: {
+          status: ProgressStatus.COMPLETED,
+          completedAt: new Date(),
+        },
+      });
+    }
+
+    return quizAttempt;
+  }
+
+  // Lấy quiz attempts của một progress
+  async getQuizAttempts(studentProgressId: string, currentUserId?: string, currentUserRole?: Role) {
+    // Tìm student progress để kiểm tra quyền
+    const studentProgress = await this.prisma.studentProgress.findUnique({
+      where: { id: studentProgressId },
+      select: { userId: true },
+    });
+
+    if (!studentProgress) {
+      throw new NotFoundException('Không tìm thấy tiến độ học tập');
+    }
+
+    // Kiểm tra quyền
+    if (currentUserRole !== Role.ADMIN && currentUserRole !== Role.TEACHER && currentUserId !== studentProgress.userId) {
+      throw new ForbiddenException('Bạn không có quyền xem attempts của tiến độ này');
+    }
+
+    const attempts = await this.prisma.quizAttempt.findMany({
+      where: { studentProgressId },
+      orderBy: { submittedAt: 'desc' },
+    });
+
+    return attempts;
+  }
+
+  // Xóa tiến độ
+  async deleteProgress(userId: string, pageBlockId: string, currentUserId?: string, currentUserRole?: Role) {
+    // Chỉ ADMIN mới có thể xóa tiến độ
+    if (currentUserRole !== Role.ADMIN) {
+      throw new ForbiddenException('Chỉ Admin mới có thể xóa tiến độ học tập');
+    }
+
+    const existingProgress = await this.prisma.studentProgress.findUnique({
+      where: {
+        userId_pageBlockId: {
+          userId,
+          pageBlockId,
+        },
+      },
+    });
+
+    if (!existingProgress) {
+      throw new NotFoundException('Không tìm thấy tiến độ học tập');
+    }
+
+    // Xóa quiz attempts trước
+    await this.prisma.quizAttempt.deleteMany({
+      where: { studentProgressId: existingProgress.id },
+    });
+
+    // Xóa progress
+    await this.prisma.studentProgress.delete({
+      where: {
+        userId_pageBlockId: {
+          userId,
+          pageBlockId,
+        },
+      },
+    });
+
+    return { message: 'Xóa tiến độ học tập thành công' };
   }
 }
