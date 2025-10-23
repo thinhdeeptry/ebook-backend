@@ -1,5 +1,6 @@
 import { IsString, IsInt, IsBoolean, IsOptional, MinLength, MaxLength, Min, Max } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class CreateBookDto {
   @ApiProperty({
@@ -173,6 +174,7 @@ export class BookQueryDto {
     example: 1,
   })
   @IsOptional()
+  @Transform(({ value }) => parseInt(value))
   @IsInt()
   @Min(1)
   @Max(12)
@@ -183,6 +185,11 @@ export class BookQueryDto {
     example: true,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   @IsBoolean()
   isPublished?: boolean;
 

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, Min, IsUrl } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateLessonDto {
@@ -9,6 +9,10 @@ export class CreateLessonDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsUrl({}, { message: 'URL hình ảnh không hợp lệ' })
+  @IsOptional()
+  imageUrl?: string;
 
   @IsInt({ message: 'Thứ tự phải là số nguyên' })
   @Min(1, { message: 'Thứ tự phải lớn hơn 0' })
@@ -32,6 +36,10 @@ export class UpdateLessonDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsUrl({}, { message: 'URL hình ảnh không hợp lệ' })
+  @IsOptional()
+  imageUrl?: string;
 
   @IsInt({ message: 'Thứ tự phải là số nguyên' })
   @Min(1, { message: 'Thứ tự phải lớn hơn 0' })
@@ -58,6 +66,7 @@ export class LessonResponseDto {
   id: string;
   title: string;
   description?: string;
+  imageUrl?: string;
   order: number;
   chapterId?: string;
   bookId?: string;

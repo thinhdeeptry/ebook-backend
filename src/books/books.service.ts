@@ -138,6 +138,26 @@ export class BooksService {
       const book = await this.prisma.book.findUnique({
         where: { id: bookId },
         include: {
+          chapters: {
+            select: {
+              id: true,
+              title: true,
+              order: true,
+              description: true,
+              lessons: {
+                select:{
+                  id: true,
+                  title: true,
+                  order: true,
+                  pages: true,
+                  _count: {
+                    select: { pages: true },
+                  },
+                }
+              }
+            }
+          } 
+          ,
           classes: {
             select: {
               id: true,

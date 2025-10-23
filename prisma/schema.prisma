@@ -115,6 +115,7 @@ model Lesson {
   id          String   @id @default(cuid())
   title       String
   description String?
+  imageUrl    String?  // URL hình ảnh bài học (có thể là ảnh chụp từ sách giáo khoa)
   order       Int
   chapterId   String?
   bookId      String?
