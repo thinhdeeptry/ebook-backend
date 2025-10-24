@@ -6,6 +6,26 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding for Vietnamese Elementary Education...');
 
+  // Moral Education book images for Grade 1
+  const moralEducationImageUrls = [
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-12.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-15.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-19.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-8.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-2.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-21.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-9.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-10.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-13.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-22.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-24.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-12.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-15.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-17.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-7.jpg&w=1920&q=75",
+    "https://truonghocsoquocgia.nxbgd.vn/_next/image?url=https%3A%2F%2Fs3-dev.gkebooks.click%2Fbook%2F31732b0b-25b6-4ad6-9dee-d9a16eab757f%2Fdao-duc-1-14.jpg&w=1920&q=75"
+  ];
+
   // Clear existing data (in development only)
   console.log('🧹 Cleaning existing data...');
   await prisma.trackingEvent.deleteMany();
@@ -524,6 +544,22 @@ async function main() {
         },
       });
       books.push(animalWorldBook);
+
+      // Moral Education book for grade 1 only
+      const moralEducationBook = await prisma.book.create({
+        data: {
+          title: `Sách giáo khoa Đạo đức lớp ${grade}`,
+          subject: 'Đạo đức',
+          grade: grade,
+          description: `Sách giáo khoa Đạo đức dành cho học sinh lớp ${grade}, giúp các em hình thành nhân cách và phẩm chất tốt đẹp`,
+          publisher: 'Nhà xuất bản Giáo dục Việt Nam',
+          isPublished: true,
+          classes: {
+            connect: [{ id: gradeClass.id }]
+          }
+        },
+      });
+      books.push(moralEducationBook);
     }
   }
 
@@ -618,21 +654,88 @@ async function main() {
         },
       });
       lessons.push(animalLesson2);
+    } else if (book.subject === 'Đạo đức') {
+      // Moral Education lessons
+      const moralLesson1 = await prisma.lesson.create({
+        data: {
+          title: 'Bài 1: Em yêu gia đình',
+          description: 'Giúp các em hiểu về tình yêu thương gia đình, biết kính trọng và yêu quý cha mẹ, ông bà',
+          order: 1,
+          chapterId: chapter1.id,
+          bookId: book.id,
+        },
+      });
+      lessons.push(moralLesson1);
+
+      const moralLesson2 = await prisma.lesson.create({
+        data: {
+          title: 'Bài 2: Em yêu trường lớp',
+          description: 'Giúp các em biết yêu quý thầy cô, bạn bè và trường lớp, có ý thức giữ gìn vệ sinh',
+          order: 2,
+          chapterId: chapter1.id,
+          bookId: book.id,
+        },
+      });
+      lessons.push(moralLesson2);
+
+      const moralLesson3 = await prisma.lesson.create({
+        data: {
+          title: 'Bài 3: Em biết chào hỏi',
+          description: 'Dạy các em cách chào hỏi lịch sự, biết nói lời cảm ơn và xin lỗi khi cần thiết',
+          order: 3,
+          chapterId: chapter2.id,
+          bookId: book.id,
+        },
+      });
+      lessons.push(moralLesson3);
+
+      const moralLesson4 = await prisma.lesson.create({
+        data: {
+          title: 'Bài 4: Em biết giúp đỡ bạn bè',
+          description: 'Giúp các em hiểu tầm quan trọng của việc giúp đỡ lẫn nhau, chia sẻ và quan tâm đến bạn bè',
+          order: 4,
+          chapterId: chapter2.id,
+          bookId: book.id,
+        },
+      });
+      lessons.push(moralLesson4);
+
+      const moralLesson5 = await prisma.lesson.create({
+        data: {
+          title: 'Bài 5: Em biết giữ gìn đồ chơi',
+          description: 'Dạy các em cách bảo quản đồ chơi, sách vở và đồ dùng học tập',
+          order: 5,
+          chapterId: chapter2.id,
+          bookId: book.id,
+        },
+      });
+      lessons.push(moralLesson5);
     }
   }
 
   // Create Pages and PageBlocks for each lesson
-  console.log('� Creating pages and page blocks...');
+  console.log('📄 Creating pages and page blocks...');
   const pageBlocks = [];
+  let moralEducationImageIndex = 0; // Track which image to use next
   
   for (const lesson of lessons) {
+    // Determine if this is a moral education lesson to assign images
+    const isMoralEducation = lesson.title.includes('Em yêu gia đình') || 
+                             lesson.title.includes('Em yêu trường lớp') || 
+                             lesson.title.includes('Em biết chào hỏi') || 
+                             lesson.title.includes('Em biết giúp đỡ') || 
+                             lesson.title.includes('Em biết giữ gìn');
+
     // Create pages for each lesson
     const introPage = await prisma.page.create({
       data: {
         lessonId: lesson.id,
         order: 1,
         title: 'Trang giới thiệu',
-        layout: 'one-column'
+        layout: 'one-column',
+        imageUrl: isMoralEducation && moralEducationImageIndex < moralEducationImageUrls.length 
+          ? moralEducationImageUrls[moralEducationImageIndex++] 
+          : undefined
       }
     });
 
@@ -641,7 +744,10 @@ async function main() {
         lessonId: lesson.id,
         order: 2,
         title: 'Trang nội dung chính',
-        layout: 'two-column'
+        layout: 'two-column',
+        imageUrl: isMoralEducation && moralEducationImageIndex < moralEducationImageUrls.length 
+          ? moralEducationImageUrls[moralEducationImageIndex++] 
+          : undefined
       }
     });
 
@@ -650,7 +756,10 @@ async function main() {
         lessonId: lesson.id,
         order: 3,
         title: 'Trang thực hành',
-        layout: 'one-column'
+        layout: 'one-column',
+        imageUrl: isMoralEducation && moralEducationImageIndex < moralEducationImageUrls.length 
+          ? moralEducationImageUrls[moralEducationImageIndex++] 
+          : undefined
       }
     });
 

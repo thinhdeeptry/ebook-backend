@@ -115,7 +115,6 @@ model Lesson {
   id          String   @id @default(cuid())
   title       String
   description String?
-  imageUrl    String?  // URL hình ảnh bài học (có thể là ảnh chụp từ sách giáo khoa)
   order       Int
   chapterId   String?
   bookId      String?
@@ -134,6 +133,7 @@ model Page {
   lessonId  String
   order     Int
   title     String?
+  imageUrl    String?  // URL hình ảnh bài học (có thể là ảnh chụp từ sách giáo khoa)
   layout    String? // one-column, two-column, etc.
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
