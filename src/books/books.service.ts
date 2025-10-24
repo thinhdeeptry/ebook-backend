@@ -20,23 +20,20 @@ export class BooksService {
         });
 
         if (existingClasses.length !== classIds.length) {
-          const missingIds = classIds.filter(
-            id => !existingClasses.find(cls => cls.id === id)
-          );
-          throw new NotFoundException(
-            `Không tìm thấy các lớp học có ID: ${missingIds.join(', ')}`
-          );
+          const missingIds = classIds.filter((id) => !existingClasses.find((cls) => cls.id === id));
+          throw new NotFoundException(`Không tìm thấy các lớp học có ID: ${missingIds.join(', ')}`);
         }
       }
 
       const newBook = await this.prisma.book.create({
         data: {
           ...bookData,
-          ...(classIds && classIds.length > 0 && {
-            classes: {
-              connect: classIds.map(id => ({ id }))
-            }
-          })
+          ...(classIds &&
+            classIds.length > 0 && {
+              classes: {
+                connect: classIds.map((id) => ({ id })),
+              },
+            }),
         },
         include: {
           classes: {
@@ -44,10 +41,10 @@ export class BooksService {
               id: true,
               name: true,
               gradeLevel: true,
-            }
+            },
           },
           _count: {
-            select: { 
+            select: {
               chapters: true,
               lessons: true,
             },
@@ -70,9 +67,9 @@ export class BooksService {
   async getAllBooks(query: BookQueryDto = {}) {
     try {
       const { search, subject, grade, isPublished, classId } = query;
-      
+
       const whereConditions: any = {};
-      
+
       if (search) {
         whereConditions.OR = [
           { title: { contains: search, mode: 'insensitive' } },
@@ -81,22 +78,22 @@ export class BooksService {
           { publisher: { contains: search, mode: 'insensitive' } },
         ];
       }
-      
+
       if (subject) {
         whereConditions.subject = { contains: subject, mode: 'insensitive' };
       }
-      
+
       if (grade !== undefined) {
         whereConditions.grade = grade;
       }
-      
+
       if (isPublished !== undefined) {
         whereConditions.isPublished = isPublished;
       }
 
       if (classId) {
         whereConditions.classes = {
-          some: { id: classId }
+          some: { id: classId },
         };
       }
 
@@ -108,20 +105,16 @@ export class BooksService {
               id: true,
               name: true,
               gradeLevel: true,
-            }
+            },
           },
           _count: {
-            select: { 
+            select: {
               chapters: true,
               lessons: true,
             },
           },
         },
-        orderBy: [
-          { grade: 'asc' },
-          { subject: 'asc' },
-          { createdAt: 'desc' },
-        ],
+        orderBy: [{ grade: 'asc' }, { subject: 'asc' }, { createdAt: 'desc' }],
       });
 
       return books;
@@ -145,28 +138,33 @@ export class BooksService {
               order: true,
               description: true,
               lessons: {
-                select:{
+                select: {
                   id: true,
                   title: true,
                   order: true,
-                  pages: true,
+                  pages: {
+                    include: {
+                      blocks: true,
+                    },
+                  },
                   _count: {
                     select: { pages: true },
                   },
-                }
-              }
-            }
-          } 
-          ,
+                },
+                orderBy: { order: 'asc' },
+              },
+            },
+            orderBy: { order: 'asc' },
+          },
           classes: {
             select: {
               id: true,
               name: true,
               gradeLevel: true,
-            }
+            },
           },
           _count: {
-            select: { 
+            select: {
               chapters: true,
               lessons: true,
             },
@@ -200,7 +198,7 @@ export class BooksService {
               id: true,
               name: true,
               gradeLevel: true,
-            }
+            },
           },
           chapters: {
             include: {
@@ -225,7 +223,7 @@ export class BooksService {
             orderBy: { order: 'asc' },
           },
           _count: {
-            select: { 
+            select: {
               chapters: true,
               lessons: true,
             },
@@ -263,12 +261,8 @@ export class BooksService {
         });
 
         if (existingClasses.length !== classIds.length) {
-          const missingIds = classIds.filter(
-            id => !existingClasses.find(cls => cls.id === id)
-          );
-          throw new NotFoundException(
-            `Không tìm thấy các lớp học có ID: ${missingIds.join(', ')}`
-          );
+          const missingIds = classIds.filter((id) => !existingClasses.find((cls) => cls.id === id));
+          throw new NotFoundException(`Không tìm thấy các lớp học có ID: ${missingIds.join(', ')}`);
         }
       }
 
@@ -279,9 +273,9 @@ export class BooksService {
           ...bookData,
           ...(classIds !== undefined && {
             classes: {
-              set: classIds.map(id => ({ id }))
-            }
-          })
+              set: classIds.map((id) => ({ id })),
+            },
+          }),
         },
         include: {
           classes: {
@@ -289,10 +283,10 @@ export class BooksService {
               id: true,
               name: true,
               gradeLevel: true,
-            }
+            },
           },
           _count: {
-            select: { 
+            select: {
               chapters: true,
               lessons: true,
             },
@@ -328,7 +322,7 @@ export class BooksService {
 
       if (chaptersCount > 0 || lessonsCount > 0) {
         throw new BadRequestException(
-          `Không thể xóa sách này vì có ${chaptersCount} chương và ${lessonsCount} bài học đang sử dụng`
+          `Không thể xóa sách này vì có ${chaptersCount} chương và ${lessonsCount} bài học đang sử dụng`,
         );
       }
 
@@ -351,7 +345,7 @@ export class BooksService {
   async togglePublishBook(bookId: string) {
     try {
       const book = await this.getBookById(bookId);
-      
+
       const updatedBook = await this.prisma.book.update({
         where: { id: bookId },
         data: { isPublished: !book.isPublished },
@@ -361,10 +355,10 @@ export class BooksService {
               id: true,
               name: true,
               gradeLevel: true,
-            }
+            },
           },
           _count: {
-            select: { 
+            select: {
               chapters: true,
               lessons: true,
             },
@@ -388,10 +382,10 @@ export class BooksService {
     try {
       const whereConditions: any = {
         classes: {
-          some: { id: classId }
-        }
+          some: { id: classId },
+        },
       };
-      
+
       if (isPublished !== undefined) {
         whereConditions.isPublished = isPublished;
       }
@@ -400,16 +394,13 @@ export class BooksService {
         where: whereConditions,
         include: {
           _count: {
-            select: { 
+            select: {
               chapters: true,
               lessons: true,
             },
           },
         },
-        orderBy: [
-          { subject: 'asc' },
-          { createdAt: 'desc' },
-        ],
+        orderBy: [{ subject: 'asc' }, { createdAt: 'desc' }],
       });
 
       return books;
@@ -427,7 +418,7 @@ export class BooksService {
         subject: { contains: subject, mode: 'insensitive' },
         grade: grade,
       };
-      
+
       if (isPublished !== undefined) {
         whereConditions.isPublished = isPublished;
       }
@@ -440,10 +431,10 @@ export class BooksService {
               id: true,
               name: true,
               gradeLevel: true,
-            }
+            },
           },
           _count: {
-            select: { 
+            select: {
               chapters: true,
               lessons: true,
             },
@@ -454,7 +445,9 @@ export class BooksService {
 
       return books;
     } catch (error) {
-      throw new BadRequestException(`Không thể lấy sách theo môn học và khối lớp: ${error.message}`);
+      throw new BadRequestException(
+        `Không thể lấy sách theo môn học và khối lớp: ${error.message}`,
+      );
     }
   }
 }

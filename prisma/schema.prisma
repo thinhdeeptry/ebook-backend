@@ -159,6 +159,10 @@ model PageBlock {
   blockType    PageBlockType
   contentJson  Json?
   h5pContentId String?
+  x            Float?        // Tọa độ X (vị trí ngang)
+  y            Float?        // Tọa độ Y (vị trí dọc)
+  width        Float?        // Chiều rộng của block
+  height       Float?        // Chiều cao của block
 
   page       Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
   h5pContent H5PContent? @relation(fields: [h5pContentId], references: [id], onDelete: SetNull)
