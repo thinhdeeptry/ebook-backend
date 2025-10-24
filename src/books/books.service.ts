@@ -144,7 +144,11 @@ export class BooksService {
                   order: true,
                   pages: {
                     include: {
-                      blocks: true,
+                      blocks: {
+                        include: {
+                          h5pContent: true,
+                        },
+                      },
                     },
                   },
                   _count: {

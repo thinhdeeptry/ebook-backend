@@ -718,6 +718,10 @@ async function main() {
   const pageBlocks = [];
   let moralEducationImageIndex = 0; // Track which image to use next
   
+  // Standard page dimensions for percentage calculation
+  const PAGE_WIDTH = 800; // Standard page width in pixels
+  const PAGE_HEIGHT = 600; // Standard page height in pixels
+  
   for (const lesson of lessons) {
     // Determine if this is a moral education lesson to assign images
     const isMoralEducation = lesson.title.includes('Em yêu gia đình') || 
@@ -772,10 +776,10 @@ async function main() {
         contentJson: {
           markdown: `# ${lesson.title}\n\n${lesson.description}\n\nTrong bài học này, các em sẽ học được những kiến thức quan trọng và thú vị. Hãy cùng bắt đầu nhé!`
         },
-        x: 50,      // Tọa độ X - vị trí từ trái sang phải (pixel)
-        y: 100,     // Tọa độ Y - vị trí từ trên xuống dưới (pixel)
-        width: 700, // Chiều rộng block
-        height: 200 // Chiều cao block
+        xPercent: (50 / PAGE_WIDTH) * 100,      // 6.25% từ trái
+        yPercent: (100 / PAGE_HEIGHT) * 100,    // 16.67% từ trên
+        widthPercent: (10 / PAGE_WIDTH) * 100, // 87.5% chiều rộng
+        heightPercent: (20 / PAGE_HEIGHT) * 100 // 33.33% chiều cao
       }
     });
     pageBlocks.push(textBlock1);
@@ -791,10 +795,10 @@ async function main() {
           alt: 'Hình minh họa bài học',
           caption: 'Hình minh họa cho bài học'
         },
-        x: 50,      // Cột trái trong layout two-column
-        y: 50,      
-        width: 350, 
-        height: 250
+        xPercent: (50 / PAGE_WIDTH) * 100,      // 6.25% từ trái (cột trái)
+        yPercent: (50 / PAGE_HEIGHT) * 100,     // 8.33% từ trên
+        widthPercent: (34 / PAGE_WIDTH) * 100, // 43.75% chiều rộng
+        heightPercent: (25 / PAGE_HEIGHT) * 100 // 41.67% chiều cao
       }
     });
     pageBlocks.push(imageBlock);
@@ -807,10 +811,10 @@ async function main() {
         contentJson: {
           markdown: `## Nội dung bài học\n\nĐây là nội dung chi tiết của bài học...`
         },
-        x: 450,     // Cột phải trong layout two-column
-        y: 50,      
-        width: 350, 
-        height: 300
+        xPercent: (450 / PAGE_WIDTH) * 100,     // 56.25% từ trái (cột phải)
+        yPercent: (50 / PAGE_HEIGHT) * 100,     // 8.33% từ trên
+        widthPercent: (35 / PAGE_WIDTH) * 100, // 43.75% chiều rộng
+        heightPercent: (30 / PAGE_HEIGHT) * 100 // 50% chiều cao
       }
     });
     pageBlocks.push(textBlock2);
@@ -843,10 +847,10 @@ async function main() {
           order: 1,
           blockType: PageBlockType.H5P,
           h5pContentId: relevantH5P.id,
-          x: 50,      // Vị trí trung tâm trang thực hành
-          y: 100,     
-          width: 700, 
-          height: 400
+          xPercent: (50 / PAGE_WIDTH) * 100,      // 6.25% từ trái
+          yPercent: (100 / PAGE_HEIGHT) * 100,    // 16.67% từ trên
+          widthPercent: (70 / PAGE_WIDTH) * 100, // 87.5% chiều rộng
+          heightPercent: (4 / PAGE_HEIGHT) * 100 // 66.67% chiều cao
         }
       });
       pageBlocks.push(h5pBlock);
@@ -860,10 +864,10 @@ async function main() {
           contentJson: {
             markdown: `## Bài tập thực hành\n\nCác em hãy thực hiện các bài tập để luyện tập kiến thức đã học.`
           },
-          x: 50,      // Vị trí trung tâm trang thực hành
-          y: 100,     
-          width: 700, 
-          height: 200
+          xPercent: (50 / PAGE_WIDTH) * 100,      // 6.25% từ trái
+          yPercent: (100 / PAGE_HEIGHT) * 100,    // 16.67% từ trên
+          widthPercent: (70 / PAGE_WIDTH) * 100, // 87.5% chiều rộng
+          heightPercent: (20 / PAGE_HEIGHT) * 100 // 33.33% chiều cao
         }
       });
       pageBlocks.push(practiceTextBlock);
