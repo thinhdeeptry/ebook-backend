@@ -10,6 +10,7 @@ import { ClassesModule } from './classes/classes.module';
 import { BooksModule } from './books/books.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { StudentProgressModule } from './student-progress/student-progress.module';
+import { QuizModule } from './quiz/quiz.module';
 import { PrismaService } from './common/prisma.service';
 
 @Global()
@@ -40,6 +41,7 @@ import { PrismaService } from './common/prisma.service';
     BooksModule,
     LessonsModule,
     StudentProgressModule,
+    QuizModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],

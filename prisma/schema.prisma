@@ -40,6 +40,7 @@ model User {
   trackingEvents    TrackingEvent[]    @relation("TrackingActor")
   uploadedLibraries H5PLibrary[]       @relation("H5PLibraryUploader")
   tempFiles         H5PTemporaryFile[] @relation("H5PTemporaryFileUploader")
+  xapiStatements    XApiStatement[]    @relation("XApiActor")
 
   @@map("users")
 }
@@ -127,7 +128,10 @@ model Lesson {
 
   @@map("lessons")
 }
-
+enum PageType {
+  THEORY    // trang thuần lý thuyết
+  INTERACTIVE // trang chứa tương tác H5P / media
+}
 model Page {
   id        String   @id @default(cuid())
   lessonId  String
@@ -135,6 +139,7 @@ model Page {
   title     String?
   imageUrl    String?  // URL hình ảnh bài học (có thể là ảnh chụp từ sách giáo khoa)
   layout    String? // one-column, two-column, etc.
+  type      PageType  @default(THEORY)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -167,6 +172,7 @@ model PageBlock {
   page       Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
   h5pContent H5PContent? @relation(fields: [h5pContentId], references: [id], onDelete: SetNull)
   progress   StudentProgress[]
+  quizConfig QuizConfig?
 
   @@map("page_blocks")
 }
@@ -202,13 +208,149 @@ model QuizAttempt {
   studentProgressId String
   attemptNumber     Int
   score             Float?
+  maxScore          Float?
   isPass            Boolean
   statement         Json?
   submittedAt       DateTime @default(now())
-
-  studentProgress StudentProgress @relation(fields: [studentProgressId], references: [id], onDelete: Cascade)
+  duration          Int?     // Thời gian làm bài (giây)
+  
+  studentProgress   StudentProgress @relation(fields: [studentProgressId], references: [id], onDelete: Cascade)
+  xapiStatements    XApiStatement[]
+  questionResponses QuestionResponse[]
 
   @@map("quiz_attempts")
+}
+
+// ===============================================
+// QUIZ/EXERCISE CONFIGURATION
+// ===============================================
+
+model QuizConfig {
+  id              String   @id @default(cuid())
+  pageBlockId     String   @unique
+  title           String?
+  description     String?
+  passingScore    Float    @default(70) // Điểm đạt yêu cầu (%)
+  weight          Float    @default(1.0) // Trọng số của bài tập
+  maxAttempts     Int?     // Số lần làm tối đa (null = không giới hạn)
+  timeLimit       Int?     // Giới hạn thời gian (phút)
+  shuffleQuestions Boolean @default(false)
+  showFeedback    Boolean  @default(true)
+  showCorrectAnswers Boolean @default(true)
+  allowReview     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  pageBlock       PageBlock @relation(fields: [pageBlockId], references: [id], onDelete: Cascade)
+  questions       QuizQuestion[]
+
+  @@map("quiz_configs")
+}
+
+model QuizQuestion {
+  id            String   @id @default(cuid())
+  quizConfigId  String
+  questionText  String
+  questionType  String   // multiple-choice, true-false, fill-blank, etc.
+  order         Int
+  points        Float    @default(1.0)
+  h5pContentId  String?  // Link đến H5P content nếu có
+  metadata      Json?    // Lưu thêm thông tin câu hỏi
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  quizConfig    QuizConfig @relation(fields: [quizConfigId], references: [id], onDelete: Cascade)
+  h5pContent    H5PContent? @relation(fields: [h5pContentId], references: [id], onDelete: SetNull)
+  responses     QuestionResponse[]
+
+  @@map("quiz_questions")
+}
+
+model QuestionResponse {
+  id              String   @id @default(cuid())
+  quizAttemptId   String
+  questionId      String
+  userAnswer      Json     // Câu trả lời của học sinh
+  isCorrect       Boolean
+  pointsEarned    Float
+  timeSpent       Int?     // Thời gian làm câu này (giây)
+  submittedAt     DateTime @default(now())
+
+  quizAttempt     QuizAttempt @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
+  question        QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("question_responses")
+}
+
+// ===============================================
+// xAPI TRACKING (Experience API Standard)
+// ===============================================
+
+model XApiStatement {
+  id              String   @id @default(cuid())
+  statementId     String   @unique // UUID theo chuẩn xAPI
+  actorId         String   // User thực hiện hành động
+  verbId          String   // Hành động (completed, attempted, answered, etc.)
+  objectId        String   // Đối tượng (quiz, question, content)
+  objectType      String   // Activity, Agent, etc.
+  resultScore     Float?   // Điểm số
+  resultScoreMin  Float?
+  resultScoreMax  Float?
+  resultSuccess   Boolean?
+  resultCompletion Boolean?
+  resultDuration  String?  // ISO 8601 duration
+  resultResponse  Json?    // Câu trả lời chi tiết
+  contextJson     Json?    // Context theo chuẩn xAPI
+  timestamp       DateTime @default(now())
+  stored          DateTime @default(now())
+  authority       Json?    // Thông tin về hệ thống ghi nhận
+  version         String   @default("1.0.3") // xAPI version
+  attachments     Json?    // Attachments nếu có
+  
+  // Relations
+  quizAttemptId   String?
+  h5pContentId    String?
+  pageBlockId     String?
+
+  actor           User @relation("XApiActor", fields: [actorId], references: [id], onDelete: Cascade)
+  verb            XApiVerb @relation(fields: [verbId], references: [id])
+  quizAttempt     QuizAttempt? @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
+  h5pContent      H5PContent? @relation("XApiH5PTracking", fields: [h5pContentId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, timestamp])
+  @@index([verbId])
+  @@index([objectId])
+  @@map("xapi_statements")
+}
+
+model XApiVerb {
+  id          String   @id @default(cuid())
+  verbIri     String   @unique // IRI theo chuẩn xAPI (e.g., http://adlnet.gov/expapi/verbs/completed)
+  display     Json     // Display name trong nhiều ngôn ngữ
+  
+  statements  XApiStatement[]
+
+  @@map("xapi_verbs")
+}
+
+// ===============================================
+// QUIZ ANALYTICS & REPORTING
+// ===============================================
+
+model QuizAnalytics {
+  id                String   @id @default(cuid())
+  pageBlockId       String
+  userId            String?  // null = analytics cho toàn bộ
+  totalAttempts     Int      @default(0)
+  averageScore      Float?
+  highestScore      Float?
+  lowestScore       Float?
+  passRate          Float?   // Tỷ lệ đạt (%)
+  averageTimeSpent  Int?     // Thời gian trung bình (giây)
+  lastCalculated    DateTime @default(now())
+  
+  @@unique([pageBlockId, userId])
+  @@map("quiz_analytics")
 }
 
 // ===============================================
@@ -230,6 +372,8 @@ model H5PContent {
   uploader       User            @relation("H5PUploader", fields: [uploaderId], references: [id], onDelete: Cascade)
   trackingEvents TrackingEvent[] @relation("H5PTracking")
   pageBlocks     PageBlock[]     // Link từ các block SGK
+  quizQuestions  QuizQuestion[]
+  xapiStatements XApiStatement[] @relation("XApiH5PTracking")
 
   @@map("h5p_contents")
 }

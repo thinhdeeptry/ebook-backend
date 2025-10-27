@@ -482,7 +482,7 @@ export class H5pController {
   ) {
     const fs = require('fs-extra');
     const path = require('path');
-    
+    console.log("req: ", req.user)
     let tempFilePath: string | null = null;
     
     try {

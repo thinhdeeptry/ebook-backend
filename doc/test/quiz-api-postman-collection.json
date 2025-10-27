@@ -1,0 +1,448 @@
+{
+  "info": {
+    "name": "Quiz API Collection",
+    "description": "Collection để test các Quiz APIs: QuizConfig, QuizQuestion, QuizAttempt, QuizAnalytics",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "quiz-api-collection",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "🎯 Quiz Config",
+      "item": [
+        {
+          "name": "Tạo Quiz Config",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.environment.set('quiz_config_id', response.id);",
+                  "  console.log('Quiz Config ID:', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageBlockId\": \"{{page_block_id}}\",\n  \"title\": \"Bài tập Toán Chương 1\",\n  \"description\": \"Kiểm tra kiến thức về phép cộng và trừ trong phạm vi 10\",\n  \"passingScore\": 70,\n  \"weight\": 2.0,\n  \"maxAttempts\": 3,\n  \"timeLimit\": 15,\n  \"shuffleQuestions\": true,\n  \"showFeedback\": true,\n  \"showCorrectAnswers\": true,\n  \"allowReview\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/quiz/config",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "config"]
+            }
+          }
+        },
+        {
+          "name": "Lấy Quiz Config theo PageBlock",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz/config/page-block/{{page_block_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "config", "page-block", "{{page_block_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật Quiz Config",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passingScore\": 75,\n  \"maxAttempts\": 5,\n  \"timeLimit\": 20,\n  \"description\": \"Bài tập đã được cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/quiz/config/{{quiz_config_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "config", "{{quiz_config_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Xóa Quiz Config",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz/config/{{quiz_config_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "config", "{{quiz_config_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "❓ Quiz Questions",
+      "item": [
+        {
+          "name": "Tạo câu hỏi Multiple Choice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.environment.set('question_id', response.id);",
+                  "  console.log('Question ID:', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quizConfigId\": \"{{quiz_config_id}}\",\n  \"questionText\": \"2 + 2 = ?\",\n  \"questionType\": \"multiple-choice\",\n  \"order\": 1,\n  \"points\": 2.0,\n  \"metadata\": {\n    \"options\": [\n      { \"id\": \"a\", \"text\": \"3\", \"isCorrect\": false },\n      { \"id\": \"b\", \"text\": \"4\", \"isCorrect\": true },\n      { \"id\": \"c\", \"text\": \"5\", \"isCorrect\": false },\n      { \"id\": \"d\", \"text\": \"6\", \"isCorrect\": false }\n    ],\n    \"feedback\": {\n      \"correct\": \"Chính xác! 2 + 2 = 4\",\n      \"incorrect\": \"Hãy thử lại nhé! Hãy đếm lại từ đầu.\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/quiz/question",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "question"]
+            }
+          }
+        },
+        {
+          "name": "Tạo câu hỏi True/False",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quizConfigId\": \"{{quiz_config_id}}\",\n  \"questionText\": \"5 lớn hơn 3. Đúng hay sai?\",\n  \"questionType\": \"true-false\",\n  \"order\": 2,\n  \"points\": 1.0,\n  \"metadata\": {\n    \"correctAnswer\": true,\n    \"feedback\": {\n      \"correct\": \"Đúng rồi! 5 > 3\",\n      \"incorrect\": \"Sai rồi! 5 lớn hơn 3 nhé!\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/quiz/question",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "question"]
+            }
+          }
+        },
+        {
+          "name": "Tạo nhiều câu hỏi cùng lúc",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quizConfigId\": \"{{quiz_config_id}}\",\n  \"questionText\": \"3 + 5 = ?\",\n  \"questionType\": \"multiple-choice\",\n  \"order\": 3,\n  \"points\": 2.0,\n  \"metadata\": {\n    \"options\": [\n      { \"id\": \"a\", \"text\": \"7\", \"isCorrect\": false },\n      { \"id\": \"b\", \"text\": \"8\", \"isCorrect\": true },\n      { \"id\": \"c\", \"text\": \"9\", \"isCorrect\": false }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/quiz/question",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "question"]
+            }
+          }
+        },
+        {
+          "name": "Lấy danh sách câu hỏi",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz/question/quiz-config/{{quiz_config_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "question", "quiz-config", "{{quiz_config_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cập nhật câu hỏi",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionText\": \"2 + 2 = ? (Câu hỏi đã cập nhật)\",\n  \"points\": 3.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/quiz/question/{{question_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "question", "{{question_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Xóa câu hỏi",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz/question/{{question_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "question", "{{question_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "✍️ Quiz Attempts (Student Flow)",
+      "item": [
+        {
+          "name": "1. Bắt đầu làm bài",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  pm.environment.set('attempt_id', response.attemptId);",
+                  "  console.log('Attempt ID:', response.attemptId);",
+                  "  console.log('Attempt Number:', response.attemptNumber);",
+                  "  console.log('Time Limit:', response.timeLimit, 'minutes');",
+                  "  console.log('Total Questions:', response.questions.length);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageBlockId\": \"{{page_block_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/quiz/attempt/start",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "attempt", "start"]
+            },
+            "description": "Bắt đầu làm bài quiz. Nhận về attemptId và danh sách câu hỏi (đã xáo trộn, không có đáp án đúng)"
+          }
+        },
+        {
+          "name": "2. Submit câu trả lời đầu tiên",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attemptId\": \"{{attempt_id}}\",\n  \"questionId\": \"{{question_id}}\",\n  \"userAnswer\": {\n    \"selectedOption\": \"b\"\n  },\n  \"timeSpent\": 45\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/quiz/attempt/submit-answer",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "attempt", "submit-answer"]
+            },
+            "description": "Submit câu trả lời cho một câu hỏi. Có thể submit từng câu hoặc submit tất cả khi complete."
+          }
+        },
+        {
+          "name": "3. Hoàn thành bài tập",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200) {",
+                  "  const response = pm.response.json();",
+                  "  console.log('=== KẾT QUẢ BÀI TẬP ===');",
+                  "  console.log('Điểm:', response.score + '/' + response.maxScore);",
+                  "  console.log('Phần trăm:', response.percentage + '%');",
+                  "  console.log('Kết quả:', response.isPass ? 'ĐẠT' : 'KHÔNG ĐẠT');",
+                  "  console.log('Điểm đạt:', response.passingScore + '%');",
+                  "  console.log('Thời gian:', response.duration, 'giây');",
+                  "  console.log('Đúng:', response.correctAnswers + '/' + response.totalQuestions);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attemptId\": \"{{attempt_id}}\",\n  \"answers\": [\n    {\n      \"questionId\": \"{{question_id}}\",\n      \"userAnswer\": { \"selectedOption\": \"b\" },\n      \"timeSpent\": 45\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/quiz/attempt/complete",
+              "host": ["{{base_url}}"],
+              "path": ["quiz", "attempt", "complete"]
+            },
+            "description": "Hoàn thành bài tập và nhận kết quả chi tiết. Tự động tạo xAPI statements."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Quiz Analytics",
+      "item": [
+        {
+          "name": "Lấy Analytics tổng quan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz-analytics/quiz/{{page_block_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz-analytics", "quiz", "{{page_block_id}}"]
+            },
+            "description": "Lấy analytics tổng quan của quiz: average score, pass rate, etc."
+          }
+        },
+        {
+          "name": "Lấy Analytics cá nhân",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz-analytics/quiz/{{page_block_id}}?userId={{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz-analytics", "quiz", "{{page_block_id}}"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}",
+                  "description": "Lọc theo user ID"
+                }
+              ]
+            },
+            "description": "Lấy analytics của một học sinh cụ thể"
+          }
+        },
+        {
+          "name": "Phân tích từng câu hỏi",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz-analytics/questions/{{quiz_config_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz-analytics", "questions", "{{quiz_config_id}}"]
+            },
+            "description": "Phân tích chi tiết từng câu hỏi: correct rate, answer distribution, average time"
+          }
+        },
+        {
+          "name": "Performance của từng học sinh",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz-analytics/students/{{quiz_config_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz-analytics", "students", "{{quiz_config_id}}"]
+            },
+            "description": "Xem performance của tất cả học sinh: best score, average, attempts"
+          }
+        },
+        {
+          "name": "Analytics cho cả lớp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz-analytics/class/{{quiz_config_id}}/{{class_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz-analytics", "class", "{{quiz_config_id}}", "{{class_id}}"]
+            },
+            "description": "Analytics tổng hợp cho cả lớp: pass rate, student performances, question analytics"
+          }
+        },
+        {
+          "name": "Tính toán và lưu Analytics",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz-analytics/calculate/{{page_block_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz-analytics", "calculate", "{{page_block_id}}"]
+            },
+            "description": "Trigger tính toán analytics (tự động chạy sau mỗi attempt, nhưng có thể chạy thủ công)"
+          }
+        },
+        {
+          "name": "Tính Analytics cho user cụ thể",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/quiz-analytics/calculate/{{page_block_id}}?userId={{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["quiz-analytics", "calculate", "{{page_block_id}}"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

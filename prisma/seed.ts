@@ -29,8 +29,14 @@ async function main() {
   // Clear existing data (in development only)
   console.log('🧹 Cleaning existing data...');
   await prisma.trackingEvent.deleteMany();
+  await prisma.xApiStatement.deleteMany();
+  await prisma.xApiVerb.deleteMany();
+  await prisma.quizAnalytics.deleteMany();
+  await prisma.questionResponse.deleteMany();
   await prisma.quizAttempt.deleteMany();
   await prisma.studentProgress.deleteMany();
+  await prisma.quizQuestion.deleteMany();
+  await prisma.quizConfig.deleteMany();
   await prisma.pageBlock.deleteMany();
   await prisma.page.deleteMany();
   await prisma.lesson.deleteMany();
@@ -226,6 +232,47 @@ async function main() {
     });
     classMemberships.push(membership);
   }
+
+  // Create xAPI Verbs first
+  console.log('🎯 Creating xAPI verbs...');
+  const xapiVerbs = await Promise.all([
+    prisma.xApiVerb.create({
+      data: {
+        verbIri: 'http://adlnet.gov/expapi/verbs/attempted',
+        display: { 'en-US': 'attempted', 'vi-VN': 'bắt đầu làm' }
+      }
+    }),
+    prisma.xApiVerb.create({
+      data: {
+        verbIri: 'http://adlnet.gov/expapi/verbs/completed',
+        display: { 'en-US': 'completed', 'vi-VN': 'hoàn thành' }
+      }
+    }),
+    prisma.xApiVerb.create({
+      data: {
+        verbIri: 'http://adlnet.gov/expapi/verbs/answered',
+        display: { 'en-US': 'answered', 'vi-VN': 'trả lời' }
+      }
+    }),
+    prisma.xApiVerb.create({
+      data: {
+        verbIri: 'http://adlnet.gov/expapi/verbs/passed',
+        display: { 'en-US': 'passed', 'vi-VN': 'đạt yêu cầu' }
+      }
+    }),
+    prisma.xApiVerb.create({
+      data: {
+        verbIri: 'http://adlnet.gov/expapi/verbs/failed',
+        display: { 'en-US': 'failed', 'vi-VN': 'không đạt' }
+      }
+    }),
+    prisma.xApiVerb.create({
+      data: {
+        verbIri: 'http://adlnet.gov/expapi/verbs/scored',
+        display: { 'en-US': 'scored', 'vi-VN': 'ghi điểm' }
+      }
+    })
+  ]);
 
   // Create H5P Libraries first
   console.log('📚 Creating H5P libraries...');
@@ -761,6 +808,7 @@ async function main() {
         order: 3,
         title: 'Trang thực hành',
         layout: 'one-column',
+        type: 'INTERACTIVE', // Mark as interactive page
         imageUrl: isMoralEducation && moralEducationImageIndex < moralEducationImageUrls.length 
           ? moralEducationImageUrls[moralEducationImageIndex++] 
           : undefined
@@ -854,6 +902,59 @@ async function main() {
         }
       });
       pageBlocks.push(h5pBlock);
+
+      // Create quiz config for this H5P block
+      const quizConfig = await prisma.quizConfig.create({
+        data: {
+          pageBlockId: h5pBlock.id,
+          title: `Bài tập: ${lesson.title}`,
+          description: 'Hoàn thành bài tập để kiểm tra kiến thức đã học',
+          passingScore: 70,
+          weight: 1.0,
+          maxAttempts: 3,
+          timeLimit: 15, // 15 minutes
+          shuffleQuestions: true,
+          showFeedback: true,
+          showCorrectAnswers: true,
+          allowReview: true
+        }
+      });
+
+      // Create sample questions for the quiz
+      await prisma.quizQuestion.createMany({
+        data: [
+          {
+            quizConfigId: quizConfig.id,
+            questionText: 'Câu hỏi 1',
+            questionType: 'multiple-choice',
+            order: 1,
+            points: 2.0,
+            h5pContentId: relevantH5P.id,
+            metadata: {
+              options: [
+                { id: 'a', text: 'Đáp án A', isCorrect: true },
+                { id: 'b', text: 'Đáp án B', isCorrect: false },
+                { id: 'c', text: 'Đáp án C', isCorrect: false }
+              ]
+            }
+          },
+          {
+            quizConfigId: quizConfig.id,
+            questionText: 'Câu hỏi 2',
+            questionType: 'multiple-choice',
+            order: 2,
+            points: 2.0,
+            h5pContentId: relevantH5P.id,
+            metadata: {
+              options: [
+                { id: 'a', text: 'Đáp án A', isCorrect: false },
+                { id: 'b', text: 'Đáp án B', isCorrect: true },
+                { id: 'c', text: 'Đáp án C', isCorrect: false }
+              ]
+            }
+          }
+        ]
+      });
     } else {
       // Create a text block instead
       const practiceTextBlock = await prisma.pageBlock.create({
@@ -909,19 +1010,115 @@ async function main() {
 
       // Create quiz attempts for completed H5P blocks
       if (status === ProgressStatus.COMPLETED && block.blockType === PageBlockType.H5P) {
-        await prisma.quizAttempt.create({
+        const score = 70 + Math.random() * 30; // Random score between 70-100
+        const isPass = score >= 70;
+        const duration = Math.floor(300 + Math.random() * 600); // 5-15 minutes in seconds
+        
+        const quizAttempt = await prisma.quizAttempt.create({
           data: {
             studentProgressId: progress.id,
             attemptNumber: 1,
-            score: 80 + Math.random() * 20, // Random score between 80-100
-            isPass: true,
+            score: score,
+            maxScore: 100,
+            isPass: isPass,
+            duration: duration,
             statement: {
               score: {
-                scaled: 0.85
+                scaled: score / 100
               }
             }
           },
         });
+
+        // Get quiz config and questions for this block
+        const quizConfig = await prisma.quizConfig.findUnique({
+          where: { pageBlockId: block.id },
+          include: { questions: true }
+        });
+
+        if (quizConfig && quizConfig.questions.length > 0) {
+          // Create question responses
+          for (const question of quizConfig.questions) {
+            const isCorrect = Math.random() > 0.3; // 70% correct rate
+            await prisma.questionResponse.create({
+              data: {
+                quizAttemptId: quizAttempt.id,
+                questionId: question.id,
+                userAnswer: { selectedOption: isCorrect ? 'a' : 'b' },
+                isCorrect: isCorrect,
+                pointsEarned: isCorrect ? question.points : 0,
+                timeSpent: Math.floor(30 + Math.random() * 60) // 30-90 seconds per question
+              }
+            });
+          }
+
+          // Create xAPI statements
+          const attemptedVerb = xapiVerbs.find(v => v.verbIri.includes('attempted'));
+          const completedVerb = xapiVerbs.find(v => v.verbIri.includes('completed'));
+          const passedVerb = xapiVerbs.find(v => v.verbIri.includes(isPass ? 'passed' : 'failed'));
+
+          // Statement: attempted
+          await prisma.xApiStatement.create({
+            data: {
+              statementId: `${student.id}-${block.id}-attempted-${Date.now()}`,
+              actorId: student.id,
+              verbId: attemptedVerb!.id,
+              objectId: quizConfig.id,
+              objectType: 'Activity',
+              quizAttemptId: quizAttempt.id,
+              h5pContentId: block.h5pContentId,
+              contextJson: {
+                platform: 'Hệ thống học tập tiểu học',
+                language: 'vi-VN'
+              },
+              timestamp: new Date(Date.now() - duration * 1000)
+            }
+          });
+
+          // Statement: completed
+          await prisma.xApiStatement.create({
+            data: {
+              statementId: `${student.id}-${block.id}-completed-${Date.now()}`,
+              actorId: student.id,
+              verbId: completedVerb!.id,
+              objectId: quizConfig.id,
+              objectType: 'Activity',
+              resultScore: score,
+              resultScoreMin: 0,
+              resultScoreMax: 100,
+              resultSuccess: isPass,
+              resultCompletion: true,
+              resultDuration: `PT${Math.floor(duration / 60)}M${duration % 60}S`,
+              quizAttemptId: quizAttempt.id,
+              h5pContentId: block.h5pContentId,
+              contextJson: {
+                platform: 'Hệ thống học tập tiểu học',
+                language: 'vi-VN'
+              }
+            }
+          });
+
+          // Statement: passed/failed
+          await prisma.xApiStatement.create({
+            data: {
+              statementId: `${student.id}-${block.id}-result-${Date.now()}`,
+              actorId: student.id,
+              verbId: passedVerb!.id,
+              objectId: quizConfig.id,
+              objectType: 'Activity',
+              resultScore: score,
+              resultScoreMin: 0,
+              resultScoreMax: 100,
+              resultSuccess: isPass,
+              quizAttemptId: quizAttempt.id,
+              h5pContentId: block.h5pContentId,
+              contextJson: {
+                platform: 'Hệ thống học tập tiểu học',
+                language: 'vi-VN'
+              }
+            }
+          });
+        }
       }
     }
   }
@@ -975,6 +1172,50 @@ async function main() {
     }
   }
 
+  // Calculate quiz analytics
+  console.log('📈 Calculating quiz analytics...');
+  const quizConfigs = await prisma.quizConfig.findMany({
+    include: {
+      pageBlock: {
+        include: {
+          progress: {
+            include: {
+              quizAttempts: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  for (const config of quizConfigs) {
+    const allAttempts = config.pageBlock.progress.flatMap(p => p.quizAttempts);
+    if (allAttempts.length > 0) {
+      const scores = allAttempts.map(a => a.score || 0);
+      const durations = allAttempts.map(a => a.duration || 0).filter(d => d > 0);
+      
+      await prisma.quizAnalytics.create({
+        data: {
+          pageBlockId: config.pageBlockId,
+          userId: null, // Overall analytics
+          totalAttempts: allAttempts.length,
+          averageScore: scores.reduce((a, b) => a + b, 0) / scores.length,
+          highestScore: Math.max(...scores),
+          lowestScore: Math.min(...scores),
+          passRate: (allAttempts.filter(a => a.isPass).length / allAttempts.length) * 100,
+          averageTimeSpent: durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : null
+        }
+      });
+    }
+  }
+
+  // Count created records
+  const xapiStatementsCount = await prisma.xApiStatement.count();
+  const quizConfigsCount = await prisma.quizConfig.count();
+  const quizQuestionsCount = await prisma.quizQuestion.count();
+  const questionResponsesCount = await prisma.questionResponse.count();
+  const quizAnalyticsCount = await prisma.quizAnalytics.count();
+
   console.log('✅ Vietnamese Elementary Education seed data created successfully!');
   console.log('\n📊 Summary:');
   console.log(`👤 Users: ${1 + teachers.length + allStudents.length} (1 admin, ${teachers.length} teachers, ${allStudents.length} students)`);
@@ -982,9 +1223,15 @@ async function main() {
   console.log(`📚 Class Memberships: ${classMemberships.length}`);
   console.log(`📖 Books: ${books.length} (Math, Vietnamese, Science, Animal World by grade)`);
   console.log(`📚 Lessons: ${lessons.length}`);
-  console.log(`� Page Blocks: ${pageBlocks.length}`);
+  console.log(`📄 Page Blocks: ${pageBlocks.length}`);
   console.log(`🎮 H5P Content: ${h5pContents.length}`);
   console.log(`📊 Student Progress Records: ${studentProgress.length}`);
+  console.log(`🎯 xAPI Verbs: ${xapiVerbs.length}`);
+  console.log(`📝 xAPI Statements: ${xapiStatementsCount}`);
+  console.log(`⚙️ Quiz Configs: ${quizConfigsCount}`);
+  console.log(`❓ Quiz Questions: ${quizQuestionsCount}`);
+  console.log(`✍️ Question Responses: ${questionResponsesCount}`);
+  console.log(`📈 Quiz Analytics: ${quizAnalyticsCount}`);
   
   console.log('\n🔐 Login Credentials:');
   console.log('Admin: admin@truongtieuhoc.edu.vn / admin123');

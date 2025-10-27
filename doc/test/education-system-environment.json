@@ -120,9 +120,30 @@
       "description": "ID của tiến độ học tập test (sẽ tự động set khi tạo progress)",
       "type": "default",
       "enabled": true
+    },
+    {
+      "key": "quiz_config_id",
+      "value": "",
+      "description": "ID của quiz config (sẽ tự động set khi tạo quiz config)",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "question_id",
+      "value": "",
+      "description": "ID của câu hỏi (sẽ tự động set khi tạo question)",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "attempt_id",
+      "value": "",
+      "description": "ID của quiz attempt (sẽ tự động set khi bắt đầu làm bài)",
+      "type": "default",
+      "enabled": true
     }
   ],
   "_postman_variable_scope": "environment",
-  "_postman_exported_at": "2024-10-21T10:00:00.000Z",
+  "_postman_exported_at": "2025-10-27T07:15:00.000Z",
   "_postman_exported_using": "Postman/11.0.0"
 }
