@@ -168,6 +168,7 @@ model PageBlock {
   yPercent     Float?        // Tọa độ Y theo phần trăm (0-100)
   widthPercent Float?        // Chiều rộng theo phần trăm (0-100)
   heightPercent Float?       // Chiều cao theo phần trăm (0-100)
+  audioUrl     String?       // 🔊 Đường dẫn file mp3 sau khi TTS
 
   page       Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
   h5pContent H5PContent? @relation(fields: [h5pContentId], references: [id], onDelete: SetNull)

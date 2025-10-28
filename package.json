@@ -33,6 +33,7 @@
     "db:manage": "node db-manager.js"
   },
   "dependencies": {
+    "@google-cloud/text-to-speech": "^6.4.0",
     "@lumieducation/h5p-express": "^10.0.4",
     "@lumieducation/h5p-mongos3": "^10.0.4",
     "@lumieducation/h5p-server": "^10.0.4",
@@ -46,6 +47,7 @@
     "@nestjs/serve-static": "^4.0.0",
     "@nestjs/swagger": "^7.1.12",
     "@prisma/client": "^5.4.2",
+    "@supabase/supabase-js": "^2.76.1",
     "@types/adm-zip": "^0.5.7",
     "@types/archiver": "^6.0.3",
     "@types/fs-extra": "^11.0.4",

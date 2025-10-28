@@ -5,7 +5,7 @@ dist/
 .env.development
 .env.test
 .env.production
-
+tts-service-account-476410-e8c637725652.json
 # Uploads
 uploads/
 temp/
